@@ -24,10 +24,10 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register/**", "/auth/login/**",
-                                "/auth/me/**", "/auth/verify/**","auth/forgotPassword/**",
-                                "auth/reset/**","auth/resend/**"
+                                "/auth/me/**", "/auth/verify/**","/auth/forgotPassword/**",
+                                "/auth/reset/**","/auth/resend/**"
                         ).permitAll() // Public endpoints
-                        .requestMatchers("/demo1","AllActiveProduct").hasAuthority("ROLE_USER") // Restrict demo1 to USER
+                        .requestMatchers("/demo1","/AllActiveProduct").hasAuthority("ROLE_USER") // Restrict demo1 to USER
                         .requestMatchers("/demo2").hasAuthority("ROLE_MERCHANT") // Restrict demo2 to MERCHANT
                         .anyRequest().authenticated() // All other requests require authentication
                 )
