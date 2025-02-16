@@ -1,0 +1,40 @@
+package com.ProjectGraduation.auth.api.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class WebSecurityConfig {
+
+    private final JWTAuthenticationFilter jwtAuthenticationFilter;
+
+    public WebSecurityConfig(JWTAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/register/**", "/auth/login/**",
+                                "/auth/me/**", "/auth/verify/**","auth/forgotPassword/**",
+                                "auth/reset/**","auth/resend/**"
+                        ).permitAll() // Public endpoints
+                        .requestMatchers("/demo1","AllActiveProduct").hasAuthority("ROLE_USER") // Restrict demo1 to USER
+                        .requestMatchers("/demo2").hasAuthority("ROLE_MERCHANT") // Restrict demo2 to MERCHANT
+                        .anyRequest().authenticated() // All other requests require authentication
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+
+
+        return http.build();
+    }
+}
