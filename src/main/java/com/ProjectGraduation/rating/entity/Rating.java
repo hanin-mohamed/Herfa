@@ -2,6 +2,7 @@ package com.ProjectGraduation.rating.entity;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.product.entity.Product;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -16,10 +17,12 @@ public class Rating {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnore
     private Product product;
 
     public Long getId() {

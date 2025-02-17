@@ -26,6 +26,7 @@ public class Order {
     private List<OrderDetails> orderDetails = new ArrayList<>();
 
     @ManyToOne
+    @JsonIgnore
     private User user ;
 
     public Order() {
