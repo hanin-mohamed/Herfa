@@ -3,6 +3,7 @@ package com.ProjectGraduation.auth.service;
 import com.ProjectGraduation.auth.api.model.LoginBody;
 import com.ProjectGraduation.auth.api.model.RegistrationBody;
 import com.ProjectGraduation.auth.entity.Merchant;
+import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.repo.MerchantRepo;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,7 @@ public class MerchantService {
         merchant.setUsername(registrationBody.getUsername());
         merchant.setEmail(registrationBody.getEmail());
         merchant.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
-        merchant.setRole("MERCHANT");
+        merchant.setRole(Role.MERCHANT);
 
         merchantRepo.save(merchant);
 

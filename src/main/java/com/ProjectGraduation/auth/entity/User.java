@@ -40,7 +40,9 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     @JsonIgnore
-    private String role;
+    @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<Order> orders = new ArrayList<>();
@@ -84,13 +86,11 @@ public class User {
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
 
-
-
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 

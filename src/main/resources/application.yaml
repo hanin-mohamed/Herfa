@@ -63,3 +63,21 @@ base:
   url: "http://localhost:9292"
 
 
+#
+#spring:
+#  datasource:
+#    url: jdbc:sqlserver://herfasql.database.windows.net:1433;databaseName=herfa;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
+#    username: herfasql@herfasql
+#    password: mhmd@fathey42582003
+#    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#    hikari:
+#      maximum-pool-size: 10
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#    database: mysql
+#    database-platform: org.hibernate.dialect.SQLServer2012Dialect

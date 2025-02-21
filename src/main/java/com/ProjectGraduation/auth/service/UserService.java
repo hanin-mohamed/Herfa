@@ -2,6 +2,7 @@ package com.ProjectGraduation.auth.service;
 
 import com.ProjectGraduation.auth.api.model.LoginUserBody;
 import com.ProjectGraduation.auth.api.model.RegistrationBody;
+import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
@@ -32,7 +33,7 @@ public class UserService {
         user.setUsername(registrationBody.getUsername());
         user.setEmail(registrationBody.getEmail());
         user.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
-        user.setRole("USER");
+        user.setRole(Role.USER);
         return userRepo.save(user) ;
     }
 
