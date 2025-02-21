@@ -26,25 +26,37 @@ public class MerchantService {
     @Autowired
     private JWTService jwtService;
 
-    public Merchant registerMerchant(RegistrationBody registrationBody) throws UserAlreadyExistsException {
 
-        if (merchantRepo.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()
-                || merchantRepo.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent()) {
+    public Merchant saveMerchant(RegistrationBody body)throws UserAlreadyExistsException{
+        if (merchantRepo.findByEmailIgnoreCase(body.getEmail()).isPresent()
+                || merchantRepo.findByUsernameIgnoreCase(body.getUsername()).isPresent()) {
             throw new UserAlreadyExistsException();
         }
-
         Merchant merchant = new Merchant();
-        merchant.setFirstName(registrationBody.getFirstName());
-        merchant.setLastName(registrationBody.getLastName());
-        merchant.setUsername(registrationBody.getUsername());
-        merchant.setEmail(registrationBody.getEmail());
-        merchant.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
+        merchant.setFirstName(body.getFirstName());
+        merchant.setLastName(body.getLastName());
+        merchant.setUsername(body.getUsername());
+        merchant.setEmail(body.getEmail());
+        merchant.setPassword(encryptionService.encryptPassword(body.getPassword()));
         merchant.setRole(Role.MERCHANT);
 
-        merchantRepo.save(merchant);
+        return merchantRepo.save(merchant);
 
-        // Send OTP after registration
-        authService.generateAndSendOtp(merchant.getEmail());
+    }
+
+    public Merchant registerMerchant(RegistrationBody registrationBody) throws UserAlreadyExistsException {
+
+
+        Merchant merchant = saveMerchant(registrationBody);
+
+        try {
+            authService.generateAndSendOtp(merchant.getEmail());
+
+        }catch (Exception e){
+            merchantRepo.delete(merchant);
+            throw new RuntimeException("Failed to send OTP. Merchant registration rolled back.", e);
+        }
+
 
         return merchant;
     }
