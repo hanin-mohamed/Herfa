@@ -9,6 +9,7 @@ import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.product.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,7 +37,8 @@ public class EventService {
     @Autowired
     private FileService fileService;
 
-    private static final String UPLOAD_DIR = "uploads/events";  // Define upload directory
+    @Value("${project.poster}")
+    private String path;
 
     @Transactional
     public Event createEvent(String token, String name, String description, MultipartFile media, LocalDateTime endTime, Double price) {
@@ -47,7 +49,7 @@ public class EventService {
         // Upload file and get the stored filename
         String mediaFileName = "";
         try {
-            mediaFileName = fileService.uploadFile(UPLOAD_DIR, media,merchant.getId());
+            mediaFileName = fileService.uploadFile(path, media, merchant.getId());
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload media file", e);
         }

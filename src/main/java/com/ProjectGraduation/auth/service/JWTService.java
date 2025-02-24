@@ -34,7 +34,7 @@ public class JWTService {
     public String generateJWT(Merchant merchant) {
         return JWT.create()
                 .withClaim(USERNAME_KEY, merchant.getUsername())
-                .withClaim("ROLE", merchant.getRole().ordinal())
+                .withClaim("ROLE", merchant.getRole().toString())
                 .withClaim("USERNAME", merchant.getUsername()) // Add role to token// Add role to token
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
                 .withIssuer(issuer)
@@ -44,7 +44,7 @@ public class JWTService {
     public String generateJWTForUser(User user) {
         return JWT.create()
                 .withClaim(USERNAME_KEY, user.getUsername())
-                .withClaim("ROLE", user.getRole().ordinal()) // Add role to token
+                .withClaim("ROLE", user.getRole().toString()) // Add role to token
                 .withClaim("USERNAME", user.getUsername()) // Add role to token// Add role to token
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
                 .withIssuer(issuer)
