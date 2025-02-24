@@ -47,7 +47,7 @@ public class EventService {
         // Upload file and get the stored filename
         String mediaFileName = "";
         try {
-            mediaFileName = fileService.uploadFile(UPLOAD_DIR, media);
+            mediaFileName = fileService.uploadFile(UPLOAD_DIR, media,merchant.getId());
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload media file", e);
         }

@@ -35,13 +35,14 @@ public class ProductService {
     }
 
     public Product addNewProduct(Product product, MultipartFile file) throws Exception {
-        String uploadedFileName = fileService.uploadFile(path, file);
-        product.setMedia(uploadedFileName);
 
-        // Ensure merchant is set (if not already handled in the controller)
-//        if (product.getMerchant() == null) {
-//            throw new IllegalArgumentException("Merchant must be provided for the product.");
-//        }
+//       /Ensure merchant is set (if not already handled in the controller)
+        if (product.getMerchant() == null) {
+            throw new IllegalArgumentException("Merchant must be provided for the product.");
+        }
+
+        String uploadedFileName = fileService.uploadFile(path, file, product.getMerchant().getId());
+        product.setMedia(uploadedFileName);
 
         return repo.save(product);
     }
@@ -54,7 +55,7 @@ public class ProductService {
             if (existingProduct.getMedia() != null) {
                 Files.deleteIfExists(Paths.get(path + File.separator + existingProduct.getMedia()));
             }
-            String uploadedFileName = fileService.uploadFile(path, file);
+            String uploadedFileName = fileService.uploadFile(path, file,product.getMerchant().getId());
             existingProduct.setMedia(uploadedFileName);
         }
 

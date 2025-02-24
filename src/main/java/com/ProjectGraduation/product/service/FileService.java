@@ -6,42 +6,61 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Service
 public class FileService {
 
-    public String uploadFile(String path, MultipartFile file) throws IOException {
-        // Get the original file name
+    public String uploadFile(String path, MultipartFile file, Long merchantId) throws IOException {
+
+        String merchantPath = path + File.separator + "merchant_" + merchantId;
+        File merchantDir = new File(merchantPath);
+        if (!merchantDir.exists()) {
+            merchantDir.mkdir();
+        }
+
+
         String originalFileName = file.getOriginalFilename();
 
-        // Extract the file extension (if present)
-        String fileExtension = "";
-        if (originalFileName != null && originalFileName.contains(".")) {
-            fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+
+        if (originalFileName == null) {
+            throw new IllegalStateException("File name cannot be null");
         }
 
-        // Generate a unique file name using UUID
-        String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
 
-        // Get the full file path
-        String filePath = path + File.separator + uniqueFileName;
+        String uniqueFileName = generateUniqueFileName(merchantPath, originalFileName);
 
-        // Create the directory if it doesn't exist
-        File dir = new File(path);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
 
-        // Copy the file to the specified path
+        String filePath = merchantPath + File.separator + uniqueFileName;
+
+
         Files.copy(file.getInputStream(), Paths.get(filePath));
+
+
+        return "merchant_" + merchantId + File.separator + uniqueFileName;
+    }
+
+    private String generateUniqueFileName(String merchantPath, String originalFileName) {
+        String baseName = originalFileName.substring(0, originalFileName.lastIndexOf('.'));
+        String extension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+        String uniqueFileName = originalFileName;
+
+        File file = new File(merchantPath + File.separator + uniqueFileName);
+        int counter = 1;
+
+
+        while (file.exists()) {
+            uniqueFileName = baseName + "_" + counter + extension;
+            file = new File(merchantPath + File.separator + uniqueFileName);
+            counter++;
+        }
 
         return uniqueFileName;
     }
 
     public InputStream getResourceFile(String path, String fileName) throws FileNotFoundException {
         String filePath = path + File.separator + fileName;
-
         return new FileInputStream(filePath);
     }
 }

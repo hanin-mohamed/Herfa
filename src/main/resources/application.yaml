@@ -1,11 +1,15 @@
 spring:
   datasource:
-    url: jdbc:mysql://yamanote.proxy.rlwy.net:27096/railway
+    url: jdbc:mysql://switchback.proxy.rlwy.net:30279/railway
     username: root
-    password: AlLmBQFyFhPiqIXokAGYtLyxuIGuuhFY
+    password: FdZaYjZxaDbynAHDmIoreGsCPzmVRxhl
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
+
+
+
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -28,11 +32,11 @@ spring:
           starttls:
             enable: true
     default-encoding: UTF-8
-#  security:
-#    user:
-#      name: admin
-#      password: admin
-#      roles: ROLE_ADMIN
+
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
 
 
 
