@@ -1,12 +1,14 @@
 spring:
   datasource:
-    url: jdbc:mysql://hopper.proxy.rlwy.net:42169/railway?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://trolley.proxy.rlwy.net:53734/railway?useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: MKxChSlAsAjMoEdUHCLZfMSeIqyqHesV
+    password: YLWYGTCfWdSDOnLnbshXkgvKOQTNPUOA
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
       connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
@@ -21,16 +23,18 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: mf7373057@gmail.com
-    password: otjleefjszgzecqc
-
+    username: mf7373057@gmail.com  # Your full email address
+    password: cfhhrlxyhiikbucn
+    # The 16-character app password you generated
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-    default-encoding: UTF-8
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
   servlet:
     multipart:
@@ -65,22 +69,3 @@ project:
 base:
   url: "http://localhost:9292"
 
-
-#
-#spring:
-#  datasource:
-#    url: jdbc:sqlserver://herfasql.database.windows.net:1433;databaseName=herfa;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30;
-#    username: herfasql@herfasql
-#    password: mhmd@fathey42582003
-#    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-#    hikari:
-#      maximum-pool-size: 10
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-#    database: mysql
-#    database-platform: org.hibernate.dialect.SQLServer2012Dialect

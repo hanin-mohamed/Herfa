@@ -31,7 +31,7 @@ public class OrderController {
     private ProductRepo repo ;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<?> createOrder(
             @RequestHeader("Authorization") String token,
             @RequestBody OrderRequest request) {

@@ -1,13 +1,15 @@
 package com.ProjectGraduation.Events.service;
 
 import com.ProjectGraduation.Events.entity.Event;
+import com.ProjectGraduation.Events.exception.*;
 import com.ProjectGraduation.Events.repo.EventRepo;
-import com.ProjectGraduation.auth.entity.Merchant;
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.MerchantRepo;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.service.JWTService;
+import com.ProjectGraduation.product.exception.FileUploadException;
+import com.ProjectGraduation.product.exception.UnauthorizedMerchantException;
 import com.ProjectGraduation.product.service.FileService;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,51 +19,51 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 public class EventService {
 
-    @Autowired
-    private EventRepo eventRepository;
-
-    @Autowired
-    private MerchantRepo merchantRepo;
-
-    @Autowired
-    private UserRepo userRepo;
-
-    @Autowired
-    private JWTService jwtService;
-
-    @Autowired
-    private FileService fileService;
+    private final EventRepo eventRepository;
+    private final UserRepo userRepo;
+    private final JWTService jwtService;
+    private final FileService fileService;
 
     @Value("${project.poster}")
     private String path;
 
-    @Transactional
-    public Event createEvent(String token, String name, String description, MultipartFile media, LocalDateTime endTime, Double price) {
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        Merchant merchant = merchantRepo.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new NoSuchElementException("Merchant not found"));
+    @Autowired
+    public EventService(EventRepo eventRepository, UserRepo userRepo, JWTService jwtService, FileService fileService) {
+        this.eventRepository = eventRepository;
+        this.userRepo = userRepo;
+        this.jwtService = jwtService;
+        this.fileService = fileService;
+    }
 
-        // Upload file and get the stored filename
-        String mediaFileName = "";
+    @Transactional
+    public Event createEvent(String token, String name, String description, MultipartFile media, LocalDateTime startTime, LocalDateTime endTime, Double price) {
+        String username = jwtService.getUsername(token.replace("Bearer ", ""));
+        User user = userRepo.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UserNotFoundException("Merchant not found with username: " + username));
+
+        if (!user.getRole().toString().equals("MERCHANT")) {
+            throw new UnauthorizedMerchantException("You are not a merchant.");
+        }
+
+        String mediaFileName;
         try {
-            mediaFileName = fileService.uploadFile(path, media, merchant.getId());
+            mediaFileName = fileService.uploadFile(path, media, user.getId(), "event", name);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload media file", e);
+            throw new FileUploadException("Failed to upload media file: " + e.getMessage());
         }
 
         Event event = new Event();
         event.setName(name);
         event.setDescription(description);
         event.setMedia(mediaFileName);
-        event.setStartTime(LocalDateTime.now());  // Set current time as start time
+        event.setStartTime(startTime);
         event.setEndTime(endTime);
         event.setPrice(price);
-        event.setMerchant(merchant);
+        event.setUser(user);
 
         return eventRepository.save(event);
     }
@@ -70,16 +72,16 @@ public class EventService {
     public void expressInterest(Long eventId, String token) {
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
         User user = userRepo.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NoSuchElementException("Event not found"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
 
         if (!event.getInterestedUsers().contains(user)) {
             event.addInterestedUser(user);
             eventRepository.save(event);
         } else {
-            throw new IllegalStateException("User already interested in this event");
+            throw new AlreadyInterestedException("User is already interested in this event.");
         }
     }
 
@@ -87,16 +89,16 @@ public class EventService {
     public void removeInterest(Long eventId, String token) {
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
         User user = userRepo.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NoSuchElementException("Event not found"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
 
         if (event.getInterestedUsers().contains(user)) {
             event.removeInterestedUser(user);
             eventRepository.save(event);
         } else {
-            throw new IllegalStateException("User is not interested in this event");
+            throw new NotInterestedException("User is not interested in this event.");
         }
     }
 

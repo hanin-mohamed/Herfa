@@ -1,7 +1,7 @@
 package com.ProjectGraduation.product.repo;
 
- import com.ProjectGraduation.product.entity.Product;
- import org.springframework.data.jpa.repository.JpaRepository;
+import com.ProjectGraduation.product.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 

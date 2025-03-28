@@ -1,6 +1,6 @@
 package com.ProjectGraduation.product.entity;
 
-import com.ProjectGraduation.auth.entity.Merchant;
+//import com.ProjectGraduation.auth.entity.Merchant;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.order.entity.OrderDetails;
@@ -39,8 +39,7 @@ public class Product {
     @JoinColumn(name = "merchant_id", nullable = false)
 //    @JsonBackReference
     @JsonIgnore
-    private Merchant merchant;
-
+    private User user;
 
     @ManyToMany(mappedBy = "product")
     @JsonIgnore
@@ -63,7 +62,7 @@ public class Product {
     public Product() {
     }
 
-    public Product(Long id, String name, String shortDescription, String longDescription, double price, double quantity, String media, Boolean active, Category category, Merchant merchant, Set<OrderDetails> orderDetails, Set<User> savedByUsers) {
+    public Product(Long id, String name, String shortDescription, String longDescription, double price, double quantity, String media, Boolean active, Category category, User user) {
         this.id = id;
         this.name = name;
         this.shortDescription = shortDescription;
@@ -73,9 +72,7 @@ public class Product {
         this.media = media;
         this.active = active;
         this.category = category;
-        this.merchant = merchant;
-        this.orderDetails = orderDetails;
-        this.savedByUsers = savedByUsers;
+        this.user = user;
     }
 
     // Getters and setters for all fields
@@ -151,14 +148,6 @@ public class Product {
         this.active = active;
     }
 
-    public Merchant getMerchant() {
-        return merchant;
-    }
-
-    public void setMerchant(Merchant merchant) {
-        this.merchant = merchant;
-    }
-
     public Set<OrderDetails> getOrderDetails() {
         return orderDetails;
     }
@@ -169,6 +158,14 @@ public class Product {
 
     public Set<User> getSavedByUsers() {
         return savedByUsers;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public void setSavedByUsers(Set<User> savedByUsers) {

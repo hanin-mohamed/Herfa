@@ -1,6 +1,6 @@
 package com.ProjectGraduation.auth.service;
 
-import com.ProjectGraduation.auth.entity.Merchant;
+//import com.ProjectGraduation.auth.entity.Merchant;
 import com.ProjectGraduation.auth.entity.User;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -31,15 +31,15 @@ public class JWTService {
         algorithm= Algorithm.HMAC256(algorithmKey) ;
     }
 
-    public String generateJWT(Merchant merchant) {
-        return JWT.create()
-                .withClaim(USERNAME_KEY, merchant.getUsername())
-                .withClaim("ROLE", merchant.getRole().toString())
-                .withClaim("USERNAME", merchant.getUsername()) // Add role to token// Add role to token
-                .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
-                .withIssuer(issuer)
-                .sign(algorithm);
-    }
+//    public String generateJWT( merchant) {
+//        return JWT.create()
+//                .withClaim(USERNAME_KEY, merchant.getUsername())
+//                .withClaim("ROLE", merchant.getRole().toString())
+//                .withClaim("USERNAME", merchant.getUsername()) // Add role to token// Add role to token
+//                .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
+//                .withIssuer(issuer)
+//                .sign(algorithm);
+//    }
 
     public String generateJWTForUser(User user) {
         return JWT.create()

@@ -1,133 +1,119 @@
 package com.ProjectGraduation.auth.api.controllerAuth;
 
 import com.ProjectGraduation.auth.api.model.*;
-import com.ProjectGraduation.auth.entity.Merchant;
-import com.ProjectGraduation.auth.service.MerchantService;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import com.ProjectGraduation.auth.exception.InvalidCredentialsException;
+import com.ProjectGraduation.auth.exception.UserNotVerifiedException;
 import com.ProjectGraduation.auth.service.AuthService;
 import com.ProjectGraduation.auth.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
 
+    private final AuthService authService;
+    private final UserService userService;
+
     @Autowired
-    private AuthService authService;
-    @Autowired
-    private UserService userService ;
-    @Autowired
-    private MerchantService merchantService;
+    public AuthenticationController(AuthService authService, UserService userService) {
+        this.authService = authService;
+        this.userService = userService;
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegistrationBody registrationBody) {
+    public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegistrationBody registrationBody) {
         try {
-            merchantService.registerMerchant(registrationBody);
-            return ResponseEntity.ok("Registration successful! Please check your email for the OTP.");
-        } catch (Exception e) {
-            e.printStackTrace();  // Add this to check the real issue
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Registration failed.");
+            User user = userService.registerUser(registrationBody);
+            return ResponseEntity.ok(new ApiResponse(true, "Registration successful! Please check your email for the OTP.", user));
+        } catch (UserAlreadyExistsException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "An unexpected error occurred: " + ex.getMessage(), null));
         }
     }
 
     @PostMapping("/verify/otp")
-    public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otp) {
-        if (authService.verifyOtp(email, otp)) {
-            return ResponseEntity.ok("OTP verified successfully! Your email is now verified.");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP.");
+    public ResponseEntity<ApiResponse> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        try {
+            boolean verified = authService.verifyOtp(email, otp);
+            if (verified) {
+                return ResponseEntity.ok(new ApiResponse(true, "OTP verified successfully! Your email is now verified.", null));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Invalid or expired OTP.", null));
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
         }
     }
 
-    @PostMapping("/login/merchant")
-    public ResponseEntity<String> loginMerchant( @RequestBody LoginBody loginBody) {
-        String jwt = merchantService.loginMerchant(loginBody);
-        if (jwt == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid credentials.");
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse> loginMerchant(@RequestBody LoginBody loginBody) {
+        try {
+            String jwtUser = userService.loginUser(loginBody);
+            return ResponseEntity.ok(new ApiResponse(true, "Login successful.", jwtUser));
+        } catch (UserNotFoundException | InvalidCredentialsException | UserNotVerifiedException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
         }
-
-        Merchant merchant = merchantService.getMerchantByUsername(loginBody.getUsername());
-        if (!merchant.isVerified()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Please verify your email first.");
-        }
-
-        return ResponseEntity.ok(jwt);
     }
 
     @PostMapping("/forgotPassword")
-    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<ApiResponse> forgotPassword(@RequestParam String email) {
         try {
             authService.sendPasswordResetOtp(email);
-            return ResponseEntity.ok("OTP has been sent to your email.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.ok(new ApiResponse(true, "OTP has been sent to your email.", null));
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
         }
     }
 
     @PostMapping("/verify/reset-otp")
-    public ResponseEntity<String> verifyResetOtp(@RequestParam String email, @RequestParam String otp) {
-        if (authService.verifyResetOtp(email, otp)) {
-            return ResponseEntity.ok("OTP is valid.");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP.");
+    public ResponseEntity<ApiResponse> verifyResetOtp(@RequestParam String email, @RequestParam String otp) {
+        boolean isValid = authService.verifyResetOtp(email, otp);
+        if (isValid) {
+            return ResponseEntity.ok(new ApiResponse(true, "OTP is valid.", null));
         }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse(false, "Invalid or expired OTP.", null));
     }
+
     @PostMapping("/reset/password")
-
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        if (authService.updatePasswordWithOtp(request.getEmail(), request.getOtp(), request.getNewPassword())) {
-            return ResponseEntity.ok("Password reset successfully.");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP or expired.");
+    public ResponseEntity<ApiResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            boolean updated = authService.updatePasswordWithOtp(request.getEmail(), request.getOtp(), request.getNewPassword());
+            if (updated) {
+                return ResponseEntity.ok(new ApiResponse(true, "Password reset successfully.", null));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Invalid OTP or email.", null));
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
         }
     }
-
 
     @PostMapping("/resend/otp")
-    public ResponseEntity<String> resendOtp(@RequestParam String email) {
+    public ResponseEntity<ApiResponse> resendOtp(@RequestParam String email) {
         try {
             authService.regenerateOtp(email);
-            return ResponseEntity.ok("A new OTP has been sent to your email.");
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to generate a new OTP.");
+            return ResponseEntity.ok(new ApiResponse(true, "A new OTP has been sent to your email.", null));
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Failed to resend OTP: " + ex.getMessage(), null));
         }
     }
-
-
-    //////////////////USER///////////
-    @PostMapping("/register/user")
-    public ResponseEntity registerUser (@Valid @RequestBody RegistrationBody registrationBody){
-        try {
-            userService.registerUser(registrationBody);
-            return ResponseEntity.ok(registrationBody);
-        } catch (UserAlreadyExistsException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-    }
-    @PostMapping("/login/user")
-    public ResponseEntity<LoginResponse> loginUser(@Valid @RequestBody LoginUserBody loginUserBody) {
-        String jwt = userService.loginUser(loginUserBody);
-        if (jwt == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } else {
-            LoginResponse response = new LoginResponse();
-            response.setJwt(jwt);
-            return ResponseEntity.ok(response);
-        }
-    }
-    @GetMapping("me/user")
-    public User getUSerProfile(@AuthenticationPrincipal User user){
-        return user;
-    }
-
-
-
 }

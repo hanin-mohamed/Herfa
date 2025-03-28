@@ -1,36 +1,40 @@
 package com.ProjectGraduation.product.controller;
-import com.ProjectGraduation.auth.entity.Merchant;
+
+import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.JWTService;
-import com.ProjectGraduation.auth.service.MerchantService;
+import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.entity.Product;
+import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.Calendar;
 import java.util.List;
+
 @RestController
 @RequestMapping("/product")
 public class ProductController {
 
-    @Autowired
-    private ProductService service;
+    private final ProductService service;
+    private final JWTService jwtService;
+    private final UserService userService;
 
     @Autowired
-    private JWTService jwtService ;
-
-    @Autowired
-    private MerchantService merchantService ;
+    public ProductController(ProductService service, JWTService jwtService, UserService userService) {
+        this.service = service;
+        this.jwtService = jwtService;
+        this.userService = userService;
+    }
 
     @PostMapping()
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
-    public Product addNewProduct(
+    public ResponseEntity<ApiResponse> addNewProduct(
             @RequestHeader("Authorization") String token,
             @RequestPart("file") MultipartFile file,
             @RequestPart("name") String name,
@@ -39,31 +43,37 @@ public class ProductController {
             @RequestPart("price") String price,
             @RequestPart("quantity") String quantity,
             @RequestPart("active") String active,
-            @RequestPart("category_id") String categoryId) throws Exception {
+            @RequestPart("category_id") String categoryId) {
+        try {
+            String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
+            User user = userService.getUserByUsername(merchantUsername);
 
-        // Extract merchant username from token
-        String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
+            Product product = new Product();
+            product.setName(name);
+            product.setShortDescription(shortDescription);
+            product.setLongDescription(longDescription);
+            product.setPrice(Double.parseDouble(price));
+            product.setQuantity(Double.parseDouble(quantity));
+            product.setActive(Boolean.parseBoolean(active));
+            product.setUser(user);
 
-        // Fetch merchant entity by username (assumes a method to get merchant by username exists)
-        Merchant merchant = merchantService.getMerchantByUsername(merchantUsername);
+            Category category = service.getCategoryById(Long.parseLong(categoryId));
+            product.setCategory(category);
 
-        Product product = new Product();
-        product.setName(name);
-        product.setShortDescription(shortDescription);
-        product.setLongDescription(longDescription);
-        product.setPrice(Double.parseDouble(price));
-        product.setQuantity(Double.parseDouble(quantity));
-        product.setActive(Boolean.parseBoolean(active));
-        product.setMerchant(merchant);
-
-        Category category = service.getCategoryById(Long.parseLong(categoryId));
-        product.setCategory(category);
-
-        return service.addNewProduct(product, file);
+            Product savedProduct = service.addNewProduct(product, file);
+            return ResponseEntity.ok(new ApiResponse(true, "Product added successfully", savedProduct));
+        } catch (InvalidProductDataException | UnauthorizedMerchantException | CategoryNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to add product: " + ex.getMessage(), null));
+        }
     }
+
     @PutMapping()
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
-    public Product updateProduct(
+    public ResponseEntity<ApiResponse> updateProduct(
             @RequestHeader("Authorization") String token,
             @RequestPart("product_id") String productId,
             @RequestPart("file") MultipartFile file,
@@ -73,70 +83,104 @@ public class ProductController {
             @RequestPart("price") String price,
             @RequestPart("quantity") String quantity,
             @RequestPart("active") String active,
-            @RequestPart("category_id") String categoryId) throws Exception {
+            @RequestPart("category_id") String categoryId) {
+        try {
+            String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
+            User user = userService.getUserByUsername(merchantUsername);
 
-        // Extract merchant username from token
-        String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
+            Product product = new Product();
+            product.setName(name);
+            product.setShortDescription(shortDescription);
+            product.setLongDescription(longDescription);
+            product.setPrice(Double.parseDouble(price));
+            product.setQuantity(Double.parseDouble(quantity));
+            product.setActive(Boolean.parseBoolean(active));
+            product.setUser(user);
 
-        // Fetch merchant entity by username
-        Merchant merchant = merchantService.getMerchantByUsername(merchantUsername);
+            Category category = service.getCategoryById(Long.parseLong(categoryId));
+            product.setCategory(category);
 
-        Product product = new Product();
-        product.setName(name);
-        product.setShortDescription(shortDescription);
-        product.setLongDescription(longDescription);
-        product.setPrice(Double.parseDouble(price));
-        product.setQuantity(Double.parseDouble(quantity));
-        product.setActive(Boolean.parseBoolean(active));
-        product.setMerchant(merchant); // Associate the product with the merchant
-
-        Category category = service.getCategoryById(Long.parseLong(categoryId));
-        product.setCategory(category);
-
-        return service.updateProduct(Long.parseLong(productId), product, file);
+            Product updatedProduct = service.updateProduct(Long.parseLong(productId), product, file);
+            return ResponseEntity.ok(new ApiResponse(true, "Product updated successfully", updatedProduct));
+        } catch (ProductNotFoundException | UnauthorizedMerchantException | CategoryNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to update product: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping("/active")
-    public List<Product> getAllActiveProduct() {
-        return service.getAllActiveProduct();
+    public ResponseEntity<ApiResponse> getAllActiveProduct() {
+        try {
+            List<Product> products = service.getAllActiveProduct();
+            return ResponseEntity.ok(new ApiResponse(true, "Active products retrieved successfully", products));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to retrieve active products: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping()
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
-    public List<Product> getAllProduct() {
-        return service.getAllProduct();
+    public ResponseEntity<ApiResponse> getAllProduct() {
+        try {
+            List<Product> products = service.getAllProduct();
+            return ResponseEntity.ok(new ApiResponse(true, "All products retrieved successfully", products));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to retrieve products: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
-    public Product getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ResponseEntity<ApiResponse> getById(@PathVariable Long id) {
+        try {
+            Product product = service.getById(id);
+            return ResponseEntity.ok(new ApiResponse(true, "Product retrieved successfully", product));
+        } catch (ProductNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to retrieve product: " + ex.getMessage(), null));
+        }
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
-    public void deleteById(@RequestHeader("Authorization") String token, @PathVariable Long id) throws Exception {
-        // Extract merchant username from JWT token
-        String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
+    public ResponseEntity<ApiResponse> deleteById(@RequestHeader("Authorization") String token, @PathVariable Long id) {
+        try {
+            String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
+            User user = userService.getUserByUsername(merchantUsername);
 
-        // Fetch merchant entity by username
-        Merchant merchant = merchantService.getMerchantByUsername(merchantUsername);
+            Product product = service.getById(id);
+            if (!product.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse(false, "You are not authorized to delete this product", null));
+            }
 
-        // Find the product by ID
-        Product product = service.getById(id);
-
-        // Ensure that the product belongs to the merchant
-        if (!product.getMerchant().getId().equals(merchant.getId())) {
-//            ResponseEntity.ok("You are not authorized to delete this product.");
-            throw new IllegalStateException("You are not authorized to delete this product.");
+            service.deleteById(id);
+            return ResponseEntity.ok(new ApiResponse(true, "Product deleted successfully", null));
+        } catch (ProductNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to delete product: " + ex.getMessage(), null));
         }
-
-        // If the merchant owns the product, delete it
-        service.deleteById(id);
     }
 
     @GetMapping("/category/{id}")
-    public List<Product> getProductsByCategory(@PathVariable Long id) {
-        return service.getProductsByCategory(id);
+    public ResponseEntity<ApiResponse> getProductsByCategory(@PathVariable Long id) {
+        try {
+            List<Product> products = service.getProductsByCategory(id);
+            return ResponseEntity.ok(new ApiResponse(true, "Products by category retrieved successfully", products));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, "Failed to retrieve products by category: " + ex.getMessage(), null));
+        }
     }
 }

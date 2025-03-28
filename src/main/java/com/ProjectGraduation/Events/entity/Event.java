@@ -1,6 +1,6 @@
 package com.ProjectGraduation.Events.entity;
 
-import com.ProjectGraduation.auth.entity.Merchant;
+//import com.ProjectGraduation.auth.entity.Merchant;
 import com.ProjectGraduation.auth.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -24,7 +24,7 @@ public class Event {
 
     @ManyToOne
     @JoinColumn(name = "merchant_id", nullable = false)
-    private Merchant merchant;
+    private User user;
 
     @ManyToMany
     @JoinTable(
@@ -101,12 +101,12 @@ public class Event {
         this.price = price;
     }
 
-    public Merchant getMerchant() {
-        return merchant;
+    public User getUser() {
+        return user;
     }
 
-    public void setMerchant(Merchant merchant) {
-        this.merchant = merchant;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Set<User> getInterestedUsers() {

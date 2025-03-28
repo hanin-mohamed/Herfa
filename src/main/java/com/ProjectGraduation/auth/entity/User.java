@@ -1,20 +1,19 @@
 package com.ProjectGraduation.auth.entity;
 
-import com.ProjectGraduation.Events.entity.Event;
+//import com.ProjectGraduation.Events.entity.Event;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.product.entity.Product;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 @Entity
 @Table(name = "user")
-
 public class User {
 
     @Id
@@ -23,13 +22,13 @@ public class User {
     @JsonIgnore
     private Long id;
 
-
     @Column(name = "username", nullable = false, unique = true)
     private String username;
 
     @Column(name = "password", nullable = false, length = 1000)
     @JsonIgnore
     private String password;
+
 
     @Column(name = "email", nullable = false, unique = true, length = 320)
     private String email;
@@ -39,10 +38,19 @@ public class User {
 
     @Column(name = "last_name", nullable = false)
     private String lastName;
+
     @JsonIgnore
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    private boolean verified = false;
+
+    private String otp;
+    private LocalDateTime otpExpiration;
+    private String resetOtp;
+    private LocalDateTime resetOtpExpiration;
+
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<Order> orders = new ArrayList<>();
@@ -56,16 +64,14 @@ public class User {
     @JsonIgnore
     private List<Product> savedProducts = new ArrayList<>();
 
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_interests",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "merchant_id")
-    )
-    @JsonIgnore
-    private List<Merchant> interestedMerchants = new ArrayList<>();
-
+    // @ManyToMany
+    // @JoinTable(
+    //     name = "user_interests",
+    //     joinColumns = @JoinColumn(name = "user_id"),
+    //     inverseJoinColumns = @JoinColumn(name = "merchant_id")
+    // )
+    // @JsonIgnore
+    // private List<Merchant> interestedMerchants = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
@@ -76,15 +82,12 @@ public class User {
     @JsonIgnore
     private List<Product> favProducts = new ArrayList<>();
 
-
-    @ManyToMany(mappedBy = "interestedUsers")
-    @JsonIgnore
-    private Set<Event> interestedEvents = new HashSet<>();
-
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
+
+    // Getters and Setters
+
 
     public Role getRole() {
         return role;
@@ -158,13 +161,13 @@ public class User {
         this.savedProducts = savedProducts;
     }
 
-    public List<Merchant> getInterestedMerchants() {
-        return interestedMerchants;
-    }
-
-    public void setInterestedMerchants(List<Merchant> interestedMerchants) {
-        this.interestedMerchants = interestedMerchants;
-    }
+//    public List<Merchant> getInterestedMerchants() {
+//        return interestedMerchants;
+//    }
+//
+//    public void setInterestedMerchants(List<Merchant> interestedMerchants) {
+//        this.interestedMerchants = interestedMerchants;
+//    }
 
     public List<Product> getFavProducts() {
         return favProducts;
@@ -173,4 +176,45 @@ public class User {
     public void setFavProducts(List<Product> favProducts) {
         this.favProducts = favProducts;
     }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getOtp() {
+        return otp;
+    }
+
+    public void setOtp(String otp) {
+        this.otp = otp;
+    }
+
+    public LocalDateTime getOtpExpiration() {
+        return otpExpiration;
+    }
+
+    public void setOtpExpiration(LocalDateTime otpExpiration) {
+        this.otpExpiration = otpExpiration;
+    }
+
+    public String getResetOtp() {
+        return resetOtp;
+    }
+
+    public void setResetOtp(String resetOtp) {
+        this.resetOtp = resetOtp;
+    }
+
+    public LocalDateTime getResetOtpExpiration() {
+        return resetOtpExpiration;
+    }
+
+    public void setResetOtpExpiration(LocalDateTime resetOtpExpiration) {
+        this.resetOtpExpiration = resetOtpExpiration;
+    }
+
 }

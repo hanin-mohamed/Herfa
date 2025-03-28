@@ -1,55 +1,67 @@
 package com.ProjectGraduation.auth.service;
 
-import com.ProjectGraduation.auth.api.model.LoginUserBody;
+import com.ProjectGraduation.auth.api.model.LoginBody;
 import com.ProjectGraduation.auth.api.model.RegistrationBody;
-import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.exception.InvalidCredentialsException;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import com.ProjectGraduation.auth.exception.UserNotVerifiedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class UserService {
     @Autowired
-    private UserRepo userRepo ;
+    private UserRepo userRepo;
     @Autowired
-    private EncryptionService encryptionService ;
+    private EncryptionService encryptionService;
     @Autowired
-    private JWTService jwtService ;
-
+    private JWTService jwtService;
+    @Autowired
+    private AuthService authService;
 
     public User registerUser(RegistrationBody registrationBody) throws UserAlreadyExistsException {
-        if (userRepo.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()
-        || userRepo.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent()
-        ){
-            throw new UserAlreadyExistsException();
+        if (userRepo.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("Email already exists: " + registrationBody.getEmail());
         }
-        User user = new User() ;
+        if (userRepo.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("Username already exists: " + registrationBody.getUsername());
+        }
+
+        User user = new User();
         user.setFirstName(registrationBody.getFirstName());
         user.setLastName(registrationBody.getLastName());
         user.setUsername(registrationBody.getUsername());
         user.setEmail(registrationBody.getEmail());
         user.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
-        user.setRole(Role.USER);
-        return userRepo.save(user) ;
+        user.setRole(registrationBody.getRole());
+
+        userRepo.save(user);
+        authService.generateAndSendOtp(user.getEmail());
+
+        return user;
     }
 
-    public String loginUser(LoginUserBody loginUserBody) {
+    public String loginUser(LoginBody loginUserBody) {
+        User user = userRepo.findByUsernameIgnoreCase(loginUserBody.getUsername())
+                .orElseGet(() -> userRepo.findByEmailIgnoreCase(loginUserBody.getUsername())
+                        .orElseThrow(() -> new InvalidCredentialsException("Invalid username or email")));
 
-        Optional <User> opUser = userRepo.findByUsernameIgnoreCase(loginUserBody.getUsername()) ;
-
-        if (opUser.isPresent()){
-            User user = opUser.get();
-            if (encryptionService.verifyPassword(loginUserBody.getPassword() , user.getPassword())){
-                return jwtService.generateJWTForUser(user) ;
-            }
+        if (!encryptionService.verifyPassword(loginUserBody.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid password");
         }
-        return null ;
 
+        if (!user.isVerified()) {
+            throw new UserNotVerifiedException("User email is not verified");
+        }
+
+        return jwtService.generateJWTForUser(user);
     }
 
-
+    public User getUserByUsername(String username) {
+        return userRepo.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
+    }
 }

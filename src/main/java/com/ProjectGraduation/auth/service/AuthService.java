@@ -1,33 +1,39 @@
 package com.ProjectGraduation.auth.service;
-import com.ProjectGraduation.auth.entity.Merchant;
-import com.ProjectGraduation.auth.entity.repo.MerchantRepo;
-import jakarta.validation.constraints.*;
+
+import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.exception.OtpStillValidException;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Random;
 
 @Service
 public class AuthService {
 
-    private static  final int OTP_EXPIRATION_MINUTES = 10 ;
-    private static final int OTP_LENGTH = 6 ;
+    private static final int OTP_EXPIRATION_MINUTES = 10;
+    private static final int OTP_LENGTH = 6;
+
     @Autowired
-    private MerchantRepo merchantRepo;
+    private UserRepo repo;
 
     @Autowired
     private JavaMailSender mailSender;
-    @Autowired EncryptionService encryptionService ;
+
+    @Autowired
+    private EncryptionService encryptionService;
 
     private final Random random = new Random();
-    private String generateOtp(){
-        return String.format("%06d",random.nextInt(999999));
+
+    private String generateOtp() {
+        return String.format("%0" + OTP_LENGTH + "d", random.nextInt((int) Math.pow(10, OTP_LENGTH)));
     }
 
-    private void sendOtpEmail (String email , String subject , String text){
+    private void sendOtpEmail(String email, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("mf7373057@gmail.com");
         message.setTo(email);
@@ -35,107 +41,88 @@ public class AuthService {
         message.setText(text);
         mailSender.send(message);
     }
+
     public void generateAndSendOtp(String email) {
-        Merchant merchant = merchantRepo.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new IllegalArgumentException("Merchant not found"));
+        User user = repo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        // Generate 6-digit OTP
         String otp = generateOtp();
+        user.setOtp(otp);
+        user.setOtpExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
+        repo.save(user);
 
-        // Store OTP with expiration time (5 minutes)
-        merchant.setOtp(otp);
-        merchant.setOtpExpiration(LocalDateTime.now().plusMinutes(5));
-        merchantRepo.save(merchant);
-
-        sendOtpEmail(email, "Your OTP Code", "Your OTP code is: " + otp + "\nIt expires in 5 minutes.");
+        sendOtpEmail(email, "Your OTP Code", "Your OTP code is: " + otp + "\nIt expires in " + OTP_EXPIRATION_MINUTES + " minutes.");
     }
-
-//    private void sendOtpEmail(String email, String otp) {
-//        SimpleMailMessage message = new SimpleMailMessage();
-//        message.setFrom("mf7373057@gmail.com");  // 🔹 Add this line
-//        message.setTo(email);
-//        message.setSubject("Your OTP Code");
-//        message.setText("Your OTP code is: " + otp + ". It will expire in 5 minutes.");
-//
-//        mailSender.send(message);
-//    }
-
 
     public boolean verifyOtp(String email, String otp) {
-        Optional<Merchant> merchantOpt = merchantRepo.findByEmailIgnoreCase(email);
+        User user = repo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        if (merchantOpt.isEmpty()) return false;
-
-        Merchant merchant = merchantOpt.get();
-
-        // Check OTP expiration and validity
-        if (merchant.getOtp() == null || merchant.getOtpExpiration().isBefore(LocalDateTime.now())) {
-            return false; // OTP expired
+        if (user.getOtp() == null || user.getOtpExpiration().isBefore(LocalDateTime.now())) {
+            return false;
         }
 
-        if (!merchant.getOtp().equals(otp)) {
-            return false; // Invalid OTP
+        if (!user.getOtp().equals(otp)) {
+            return false;
         }
 
-        // Mark email as verified and clear OTP
-        merchant.setVerified(true);
-        merchant.setOtp(otp);
-//        merchant.setOtpExpiration();
-        merchantRepo.save(merchant);
-
+        user.setVerified(true);
+        user.setOtp(null);
+        repo.save(user);
         return true;
     }
+
     public void sendPasswordResetOtp(String email) {
-        Merchant merchant = merchantRepo.findByEmailIgnoreCase(email)
-                .orElseThrow(()->new IllegalArgumentException("Email , not found !!")) ;
+        User user = repo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException("Email not found: " + email));
 
-        String otp = generateOtp() ;
-        merchant.setResetToken(otp);
-        merchant.setResetTokenExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
-        merchantRepo.save(merchant);
-        sendOtpEmail(email, "Password Reset OTP", "Your OTP for password reset is: " + otp + "\nExpires in 10 minutes.");
+        String otp = generateOtp();
+        user.setResetOtp(otp);
+        user.setResetOtpExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
+        repo.save(user);
 
+        sendOtpEmail(email, "Password Reset OTP", "Your OTP for password reset is: " + otp + "\nExpires in " + OTP_EXPIRATION_MINUTES + " minutes.");
     }
 
-    public boolean verifyResetOtp(String email , String otp) {
-        Optional<Merchant> merchantOtp = merchantRepo.findByEmailIgnoreCase(email) ;
-        if (merchantOtp.isEmpty())return false ;
-        Merchant merchant = merchantOtp.get() ;
-        return merchant.getResetToken() != null &&
-                merchant.getResetToken().equals(otp)&&
-                merchant.getResetTokenExpiration().isAfter(LocalDateTime.now());
+    public boolean verifyResetOtp(String email, String otp) {
+        User user = repo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+
+        if (user.getResetOtp() == null || user.getResetOtpExpiration().isBefore(LocalDateTime.now())) {
+            return false;
+        }
+
+        return user.getResetOtp().equals(otp);
     }
 
-    public boolean updatePasswordWithOtp (String email , String otp , String newPassword){
+    public boolean updatePasswordWithOtp(String email, String otp, String newPassword) {
+        User user = repo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        if (!verifyResetOtp(email, otp))return false ;
+        if (user.getResetOtp() == null || user.getResetOtpExpiration().isBefore(LocalDateTime.now()) || !user.getResetOtp().equals(otp)) {
+            return false;
+        }
 
-        Merchant merchant = merchantRepo.findByEmailIgnoreCase(email)
-                .orElseThrow(()->new IllegalArgumentException("Invaild email !!")) ;
-
-        merchant . setPassword(encryptionService.encryptPassword(newPassword));
-        merchant.setResetToken(otp);
-//        merchant.setResetTokenExpiration(null);
-        merchantRepo.save(merchant);
+        user.setPassword(encryptionService.encryptPassword(newPassword));
+        user.setResetOtp(null);
+        user.setResetOtpExpiration(null);
+        repo.save(user);
         return true;
     }
 
     public void regenerateOtp(String email) {
-        Merchant merchant = merchantRepo.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new IllegalArgumentException("Merchant not found"));
+        User user = repo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        if (merchant.getOtpExpiration() != null && merchant.getOtpExpiration().isAfter(LocalDateTime.now())) {
-            throw new IllegalStateException("OTP is still valid. Please use the current OTP.");
+        if (user.getOtpExpiration() != null && user.getOtpExpiration().isAfter(LocalDateTime.now())) {
+            throw new OtpStillValidException("Current OTP is still valid until " + user.getOtpExpiration());
         }
 
-        // Generate new OTP
         String newOtp = generateOtp();
-        merchant.setOtp(newOtp);
-        merchant.setOtpExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
-        merchantRepo.save(merchant);
+        user.setOtp(newOtp);
+        user.setOtpExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
+        repo.save(user);
 
-        // Send new OTP via email
         sendOtpEmail(email, "New OTP Code", "Your new OTP code is: " + newOtp + "\nIt expires in " + OTP_EXPIRATION_MINUTES + " minutes.");
     }
-
 }
