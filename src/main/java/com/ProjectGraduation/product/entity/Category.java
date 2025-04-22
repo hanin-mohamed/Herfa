@@ -17,6 +17,9 @@ public class Category {
 
     private String name;
 
+    private String description ;
+    private double percentage ;
+
     @OneToMany(mappedBy = "category" )
 //    @JsonManagedReference
     @JsonIgnore
@@ -51,6 +54,22 @@ public class Category {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public double getPercentage() {
+        return percentage;
+    }
+
+    public void setPercentage(double percentage) {
+        this.percentage = percentage;
     }
 
     public List<Product> getProducts() {

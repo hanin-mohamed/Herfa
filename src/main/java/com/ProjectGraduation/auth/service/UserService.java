@@ -45,6 +45,7 @@ public class UserService {
     }
 
     public String loginUser(LoginBody loginUserBody) {
+
         User user = userRepo.findByUsernameIgnoreCase(loginUserBody.getUsername())
                 .orElseGet(() -> userRepo.findByEmailIgnoreCase(loginUserBody.getUsername())
                         .orElseThrow(() -> new InvalidCredentialsException("Invalid username or email")));

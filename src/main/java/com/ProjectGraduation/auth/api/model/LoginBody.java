@@ -1,7 +1,7 @@
 package com.ProjectGraduation.auth.api.model;
 
 public class LoginBody {
-    private String username ;
+    private String username;
     private String password ;
 
     public String getUsername() {
