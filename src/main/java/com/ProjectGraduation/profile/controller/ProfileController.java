@@ -46,14 +46,14 @@ public class ProfileController {
         profileService.updateProfilePic(user, file);
         return ResponseEntity.ok("Profile picture updated successfully");
     }
-    @GetMapping("/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<Profile> viewProfileById(@PathVariable Long userId) {
         Profile profile = profileService.getProfileByUserId(userId);
         return ResponseEntity.ok(profile);
     }
-    @GetMapping("/{userId}")
-    public ResponseEntity<ProfileWithProductsDTO> viewMerchantProfileById(@PathVariable Long userId) {
-        return ResponseEntity.ok(profileService.getProfileWithProducts(userId));
+    @GetMapping("/merchant/{merchantId}")
+    public ResponseEntity<ProfileWithProductsDTO> viewMerchantProfileById(@PathVariable Long merchantId) {
+        return ResponseEntity.ok(profileService.getProfileWithProducts(merchantId));
     }
 
 
