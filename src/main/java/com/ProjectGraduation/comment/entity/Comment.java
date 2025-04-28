@@ -37,4 +37,9 @@ public class Comment {
     @JsonIgnore
     private Product product;
 
+    public Comment(String content, User user, Product product) {
+        this.content = content;
+        this.user = user;
+        this.product = product;
+    }
 }
