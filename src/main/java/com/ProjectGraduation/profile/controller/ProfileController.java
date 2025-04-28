@@ -22,7 +22,7 @@ public class ProfileController {
 
     @GetMapping
     public ResponseEntity<Profile> getMyProfile(@RequestHeader("Authorization") String token) {
-        String username = jwtService.extractUsernameFromToken(token);
+        String username = jwtService.getUsername(token);
         User user = userService.getUserByUsername(username);
         Profile profile = profileService.getProfile(user);
         return ResponseEntity.ok(profile);
@@ -31,7 +31,7 @@ public class ProfileController {
     @PatchMapping
     public ResponseEntity<Profile> updateMyProfile(@RequestHeader("Authorization") String token,
                                                    @RequestBody UpdateProfileRequestDTO updateRequest) {
-        String username = jwtService.extractUsernameFromToken(token);
+        String username = jwtService.getUsername(token);
         User user = userService.getUserByUsername(username);
         Profile updatedProfile = profileService.updateProfile(user, updateRequest);
         return ResponseEntity.ok(updatedProfile);
@@ -40,7 +40,7 @@ public class ProfileController {
     @PostMapping("/upload-picture")
     public ResponseEntity<String> uploadProfilePicture(@RequestHeader("Authorization") String token,
                                                        @RequestParam("file") MultipartFile file) {
-        String username = jwtService.extractUsernameFromToken(token);
+        String username = jwtService.getUsername(token);
         User user = userService.getUserByUsername(username);
         profileService.updateProfilePic(user, file);
         return ResponseEntity.ok("Profile picture updated successfully");
