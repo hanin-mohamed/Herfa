@@ -1,4 +1,4 @@
-package com.ProjectGraduation.rating.entity;
+package com.ProjectGraduation.rating.ProductRating.entity;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.product.entity.Product;
@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "rating")
-public class Rating {
+@Table(name = "product_rating")
+public class ProductRating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

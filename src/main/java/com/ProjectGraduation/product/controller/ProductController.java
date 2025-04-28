@@ -8,6 +8,7 @@ import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,18 +20,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/product")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService service;
     private final JWTService jwtService;
     private final UserService userService;
-
-    @Autowired
-    public ProductController(ProductService service, JWTService jwtService, UserService userService) {
-        this.service = service;
-        this.jwtService = jwtService;
-        this.userService = userService;
-    }
 
     @PostMapping()
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
@@ -182,5 +177,6 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(false, "Failed to retrieve products by category: " + ex.getMessage(), null));
         }
+
     }
 }

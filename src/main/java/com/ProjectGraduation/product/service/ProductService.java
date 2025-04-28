@@ -6,11 +6,9 @@ import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.repo.CategoryRepo;
 import com.ProjectGraduation.product.repo.ProductRepo;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -121,8 +119,12 @@ public class ProductService {
     public List<Product> getProductsByIds(List<Long> ids) {
         return repo.findAllById(ids);
     }
-    public Product saveProduct(Product product) {
-        return repo.save(product);
+    public void saveProduct(Product product) {
+        repo.save(product);
+    }
+
+    public List<Product> getMerchantProducts(User user) {
+        return repo.findAllByUserId(user);
     }
 
 }

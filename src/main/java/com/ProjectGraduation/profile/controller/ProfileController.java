@@ -3,6 +3,7 @@ package com.ProjectGraduation.profile.controller;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;
+import com.ProjectGraduation.profile.dto.ProfileWithProductsDTO;
 import com.ProjectGraduation.profile.dto.UpdateProfileRequestDTO;
 import com.ProjectGraduation.profile.entity.Profile;
 import com.ProjectGraduation.profile.service.ProfileService;
@@ -45,5 +46,15 @@ public class ProfileController {
         profileService.updateProfilePic(user, file);
         return ResponseEntity.ok("Profile picture updated successfully");
     }
+    @GetMapping("/{userId}")
+    public ResponseEntity<Profile> viewProfileById(@PathVariable Long userId) {
+        Profile profile = profileService.getProfileByUserId(userId);
+        return ResponseEntity.ok(profile);
+    }
+    @GetMapping("/{userId}")
+    public ResponseEntity<ProfileWithProductsDTO> viewMerchantProfileById(@PathVariable Long userId) {
+        return ResponseEntity.ok(profileService.getProfileWithProducts(userId));
+    }
+
 
 }

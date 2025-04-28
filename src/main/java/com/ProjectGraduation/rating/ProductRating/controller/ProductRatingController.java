@@ -1,10 +1,10 @@
-package com.ProjectGraduation.rating.controller;
+package com.ProjectGraduation.rating.ProductRating.controller;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.service.JWTService;
-import com.ProjectGraduation.rating.service.RatingService;
-import com.ProjectGraduation.rating.entity.Rating;
+import com.ProjectGraduation.rating.ProductRating.entity.ProductRating;
+import com.ProjectGraduation.rating.ProductRating.service.ProductRatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/rating")
-public class RatingController {
+public class ProductRatingController {
     @Autowired
-    private RatingService service ;
+    private ProductRatingService service ;
     @Autowired
     private JWTService jwtService ;
     @Autowired
@@ -32,8 +32,8 @@ public class RatingController {
                 ()->new RuntimeException("User Not Found"));
 
         Long userId = user.getId();
-        Rating rating = service.addOrUpdateRating(userId,productId,stars);
-        return ResponseEntity.ok(rating) ;
+        ProductRating productRating = service.addOrUpdateRating(userId,productId,stars);
+        return ResponseEntity.ok(productRating) ;
     }
 
 

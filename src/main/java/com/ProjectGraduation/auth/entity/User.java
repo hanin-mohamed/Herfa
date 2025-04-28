@@ -5,6 +5,7 @@ import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.profile.entity.Profile;
+import com.ProjectGraduation.rating.ProfileRating.entity.ProfileRating;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -98,14 +99,14 @@ public class User {
     @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
     private Profile profile;
 
+    @OneToMany(mappedBy = "rater")
+    @JsonIgnore
+    private List<ProfileRating> ratingsGiven;
 
-//    public List<Merchant> getInterestedMerchants() {
-//        return interestedMerchants;
-//    }
-//
-//    public void setInterestedMerchants(List<Merchant> interestedMerchants) {
-//        this.interestedMerchants = interestedMerchants;
-//    }
+    @OneToMany(mappedBy = "ratedUser")
+    @JsonIgnore
+    private List<ProfileRating> ratingsReceived;
+
 
 
 }
