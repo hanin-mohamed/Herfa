@@ -9,6 +9,7 @@ import com.ProjectGraduation.auth.exception.UserNotVerifiedException;
 import com.ProjectGraduation.auth.service.AuthService;
 import com.ProjectGraduation.auth.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +17,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthService authService;
     private final UserService userService;
 
-    @Autowired
-    public AuthenticationController(AuthService authService, UserService userService) {
-        this.authService = authService;
-        this.userService = userService;
-    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegistrationBody registrationBody) {

@@ -5,6 +5,7 @@ import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.rating.ProductRating.entity.ProductRating;
 import com.ProjectGraduation.rating.ProductRating.service.ProductRatingService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,13 +13,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/rating")
+@RequiredArgsConstructor
 public class ProductRatingController {
-    @Autowired
-    private ProductRatingService service ;
-    @Autowired
-    private JWTService jwtService ;
-    @Autowired
-    private UserRepo userRepo ;
+
+    private final ProductRatingService service ;
+
+    private final JWTService jwtService ;
+
+    private final UserRepo userRepo ;
 
     @PostMapping()
     @PreAuthorize("hasAuthority('ROLE_USER')")

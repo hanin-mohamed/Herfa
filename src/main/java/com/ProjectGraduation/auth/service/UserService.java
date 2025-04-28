@@ -8,19 +8,18 @@ import com.ProjectGraduation.auth.exception.InvalidCredentialsException;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.auth.exception.UserNotVerifiedException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    @Autowired
-    private UserRepo userRepo;
-    @Autowired
-    private EncryptionService encryptionService;
-    @Autowired
-    private JWTService jwtService;
-    @Autowired
-    private AuthService authService;
+
+    private final UserRepo userRepo;
+    private final EncryptionService encryptionService;
+    private final JWTService jwtService;
+    private final AuthService authService;
 
     public User registerUser(RegistrationBody registrationBody) throws UserAlreadyExistsException {
         if (userRepo.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()) {

@@ -5,6 +5,7 @@ import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.service.CommentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +17,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/comment")
+@RequiredArgsConstructor
 public class CommentController {
-    @Autowired
-    private CommentService commentService ;
-    @Autowired
-    private JWTService jwtService ;
-    @Autowired
-    private UserRepo repo ;
+    private final CommentService commentService ;
+    private final JWTService jwtService ;
+    private final UserRepo repo ;
 
     @PostMapping()
     @PreAuthorize("hasAuthority('ROLE_USER')")

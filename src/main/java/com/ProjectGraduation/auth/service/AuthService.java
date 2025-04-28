@@ -4,6 +4,7 @@ import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.exception.OtpStillValidException;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,19 +14,17 @@ import java.time.LocalDateTime;
 import java.util.Random;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private static final int OTP_EXPIRATION_MINUTES = 10;
     private static final int OTP_LENGTH = 6;
 
-    @Autowired
-    private UserRepo repo;
+    private final UserRepo repo;
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
-    @Autowired
-    private EncryptionService encryptionService;
+    private final EncryptionService encryptionService;
 
     private final Random random = new Random();
 

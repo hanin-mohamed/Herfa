@@ -2,6 +2,7 @@ package com.ProjectGraduation.FavProduct.controller;
 
 import com.ProjectGraduation.FavProduct.service.FavService;
 import com.ProjectGraduation.auth.entity.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,10 +12,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/fav")
+@RequiredArgsConstructor
 public class FavController {
 
-    @Autowired
-    private FavService service ;
+    private final FavService service ;
 
 
     @PostMapping("/{productId}")

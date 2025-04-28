@@ -6,6 +6,7 @@ import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.repo.CategoryRepo;
 import com.ProjectGraduation.product.repo.ProductRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepo repo;
@@ -29,12 +31,6 @@ public class ProductService {
     @Value("${base.url}")
     private String baseUrl;
 
-    @Autowired
-    public ProductService(ProductRepo repo, CategoryRepo categoryRepository, FileService fileService) {
-        this.repo = repo;
-        this.categoryRepository = categoryRepository;
-        this.fileService = fileService;
-    }
 
     public Category getCategoryById(Long id) {
         return categoryRepository.findById(id)

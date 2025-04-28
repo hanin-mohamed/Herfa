@@ -1,14 +1,22 @@
 package com.ProjectGraduation.Events.entity;
 
-//import com.ProjectGraduation.auth.entity.Merchant;
 import com.ProjectGraduation.auth.entity.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "events")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Event {
 
     @Id
@@ -20,7 +28,7 @@ public class Event {
     private String media;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private Double price; // Optional
+    private Double price;
 
     @ManyToOne
     @JoinColumn(name = "merchant_id", nullable = false)
@@ -40,80 +48,5 @@ public class Event {
 
     public void removeInterestedUser(User user) {
         interestedUsers.remove(user);
-    }
-
-    // Getters and Setters
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getMedia() {
-        return media;
-    }
-
-    public void setMedia(String media) {
-        this.media = media;
-    }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Set<User> getInterestedUsers() {
-        return interestedUsers;
-    }
-
-    public void setInterestedUsers(Set<User> interestedUsers) {
-        this.interestedUsers = interestedUsers;
     }
 }

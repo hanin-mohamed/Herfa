@@ -1,6 +1,7 @@
 package com.ProjectGraduation.product.controller;
 import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.service.CategoryService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,9 +10,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/category")
+@RequiredArgsConstructor
 public class CategoryController {
-    @Autowired
-    private CategoryService service ;
+
+    private final CategoryService service ;
 
     @PostMapping()
     public Category addNewCategory (@RequestPart("name")  String name) throws IOException {

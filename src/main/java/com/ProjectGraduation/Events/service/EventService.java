@@ -10,6 +10,7 @@ import com.ProjectGraduation.product.exception.FileUploadException;
 import com.ProjectGraduation.product.exception.UnauthorizedMerchantException;
 import com.ProjectGraduation.product.service.FileService;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class EventService {
 
     private final EventRepo eventRepository;
@@ -31,13 +33,7 @@ public class EventService {
     @Value("${project.poster}")
     private String path;
 
-    @Autowired
-    public EventService(EventRepo eventRepository, UserRepo userRepo, JWTService jwtService, FileService fileService) {
-        this.eventRepository = eventRepository;
-        this.userRepo = userRepo;
-        this.jwtService = jwtService;
-        this.fileService = fileService;
-    }
+
 
     @Transactional
     public Event createEvent(String token, String name, String description, MultipartFile media, LocalDateTime startTime, LocalDateTime endTime, Double price) {

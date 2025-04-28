@@ -5,23 +5,24 @@ import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.repo.ProductRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+
 @Service
+@RequiredArgsConstructor
 public class FavService {
 
-    @Autowired
-    private JWTService jwtService ;
 
-    @Autowired
-    private UserRepo userRepo ;
+    private final JWTService jwtService ;
 
-    @Autowired
-    private ProductRepo repo ;
+    private final UserRepo userRepo ;
+
+    private final ProductRepo repo ;
 
 
     @Transactional
