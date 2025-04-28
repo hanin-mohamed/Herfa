@@ -1,12 +1,15 @@
 package com.ProjectGraduation.product.entity;
 
-//import com.ProjectGraduation.auth.entity.Merchant;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.order.entity.OrderDetails;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,6 +18,10 @@ import java.util.Set;
 
 @Entity
 @Table(name = "product")
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
 
     @Id
@@ -25,10 +32,11 @@ public class Product {
     private String shortDescription;
     private String longDescription;
     private double price;
-    private double quantity;
+    private int quantity;
     private String media;
 
-    private Boolean active ;
+    @Column(nullable = false)
+    private Boolean active;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
@@ -37,138 +45,24 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "merchant_id", nullable = false)
-//    @JsonBackReference
     @JsonIgnore
     private User user;
 
     @ManyToMany(mappedBy = "product")
     @JsonIgnore
-    private Set<OrderDetails> orderDetails = new HashSet<>();
+    private Set<OrderDetails> orderDetails;
 
     @ManyToMany(mappedBy = "savedProducts")
     @JsonIgnore
-    private Set<User> savedByUsers = new HashSet<>();
+    private Set<User> savedByUsers;
 
     @ManyToMany(mappedBy = "favProducts")
     @JsonIgnore
-    private Set<User> favByUsers = new HashSet<>();
+    private Set<User> favByUsers;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Comment> comments = new ArrayList<>();
+    private List<Comment> comments;
 
 
-
-    public Product() {
-    }
-
-    public Product(Long id, String name, String shortDescription, String longDescription, double price, double quantity, String media, Boolean active, Category category, User user) {
-        this.id = id;
-        this.name = name;
-        this.shortDescription = shortDescription;
-        this.longDescription = longDescription;
-        this.price = price;
-        this.quantity = quantity;
-        this.media = media;
-        this.active = active;
-        this.category = category;
-        this.user = user;
-    }
-
-    // Getters and setters for all fields
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getShortDescription() {
-        return shortDescription;
-    }
-
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
-    }
-
-    public String getLongDescription() {
-        return longDescription;
-    }
-
-    public void setLongDescription(String longDescription) {
-        this.longDescription = longDescription;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public double getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(double quantity) {
-        this.quantity = quantity;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public String getMedia() {
-        return media;
-    }
-
-    public void setMedia(String media) {
-        this.media = media;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    public Set<OrderDetails> getOrderDetails() {
-        return orderDetails;
-    }
-
-    public void setOrderDetails(Set<OrderDetails> orderDetails) {
-        this.orderDetails = orderDetails;
-    }
-
-    public Set<User> getSavedByUsers() {
-        return savedByUsers;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setSavedByUsers(Set<User> savedByUsers) {
-        this.savedByUsers = savedByUsers;
-    }
 }

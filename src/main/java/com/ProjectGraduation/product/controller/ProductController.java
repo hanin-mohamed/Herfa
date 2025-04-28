@@ -53,7 +53,7 @@ public class ProductController {
             product.setShortDescription(shortDescription);
             product.setLongDescription(longDescription);
             product.setPrice(Double.parseDouble(price));
-            product.setQuantity(Double.parseDouble(quantity));
+            product.setQuantity(Integer.parseInt(quantity));
             product.setActive(Boolean.parseBoolean(active));
             product.setUser(user);
 
@@ -93,7 +93,7 @@ public class ProductController {
             product.setShortDescription(shortDescription);
             product.setLongDescription(longDescription);
             product.setPrice(Double.parseDouble(price));
-            product.setQuantity(Double.parseDouble(quantity));
+            product.setQuantity(Integer.parseInt(quantity));
             product.setActive(Boolean.parseBoolean(active));
             product.setUser(user);
 

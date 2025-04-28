@@ -31,15 +31,6 @@ public class JWTService {
         algorithm= Algorithm.HMAC256(algorithmKey) ;
     }
 
-//    public String generateJWT( merchant) {
-//        return JWT.create()
-//                .withClaim(USERNAME_KEY, merchant.getUsername())
-//                .withClaim("ROLE", merchant.getRole().toString())
-//                .withClaim("USERNAME", merchant.getUsername()) // Add role to token// Add role to token
-//                .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
-//                .withIssuer(issuer)
-//                .sign(algorithm);
-//    }
 
     public String generateJWTForUser(User user) {
         return JWT.create()
@@ -56,6 +47,9 @@ public class JWTService {
     }
 
     public String getUsername(String token) {
+        token = token.replace("Bearer ", "");
         return JWT.decode(token).getClaim("USERNAME").asString();
     }
+
+
 }

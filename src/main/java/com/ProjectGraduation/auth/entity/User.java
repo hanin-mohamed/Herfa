@@ -4,16 +4,23 @@ package com.ProjectGraduation.auth.entity;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.product.entity.Product;
+import com.ProjectGraduation.profile.entity.Profile;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 @Entity
 @Table(name = "user")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -48,7 +55,9 @@ public class User {
 
     private String otp;
     private LocalDateTime otpExpiration;
+    @Setter
     private String resetOtp;
+    @Setter
     private LocalDateTime resetOtpExpiration;
 
     @OneToMany(mappedBy = "user")
@@ -86,80 +95,9 @@ public class User {
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
 
-    // Getters and Setters
+    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
+    private Profile profile;
 
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public List<Order> getOrders() {
-        return orders;
-    }
-
-    public void setOrders(List<Order> orders) {
-        this.orders = orders;
-    }
-
-    public List<Product> getSavedProducts() {
-        return savedProducts;
-    }
-
-    public void setSavedProducts(List<Product> savedProducts) {
-        this.savedProducts = savedProducts;
-    }
 
 //    public List<Merchant> getInterestedMerchants() {
 //        return interestedMerchants;
@@ -169,52 +107,5 @@ public class User {
 //        this.interestedMerchants = interestedMerchants;
 //    }
 
-    public List<Product> getFavProducts() {
-        return favProducts;
-    }
-
-    public void setFavProducts(List<Product> favProducts) {
-        this.favProducts = favProducts;
-    }
-
-    public boolean isVerified() {
-        return verified;
-    }
-
-    public void setVerified(boolean verified) {
-        this.verified = verified;
-    }
-
-    public String getOtp() {
-        return otp;
-    }
-
-    public void setOtp(String otp) {
-        this.otp = otp;
-    }
-
-    public LocalDateTime getOtpExpiration() {
-        return otpExpiration;
-    }
-
-    public void setOtpExpiration(LocalDateTime otpExpiration) {
-        this.otpExpiration = otpExpiration;
-    }
-
-    public String getResetOtp() {
-        return resetOtp;
-    }
-
-    public void setResetOtp(String resetOtp) {
-        this.resetOtp = resetOtp;
-    }
-
-    public LocalDateTime getResetOtpExpiration() {
-        return resetOtpExpiration;
-    }
-
-    public void setResetOtpExpiration(LocalDateTime resetOtpExpiration) {
-        this.resetOtpExpiration = resetOtpExpiration;
-    }
 
 }

@@ -1,106 +1,105 @@
 package com.ProjectGraduation.order.service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.order.dto.OrderRequest;
+import com.ProjectGraduation.order.dto.OrderItemRequest;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.entity.OrderDetails;
-import com.ProjectGraduation.order.repo.OrderDetailsRepo;
 import com.ProjectGraduation.order.repo.OrderRepo;
 import com.ProjectGraduation.product.entity.Product;
-import com.ProjectGraduation.product.repo.ProductRepo;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ProjectGraduation.product.service.ProductService;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
-    @Autowired
-    private OrderRepo orderRepo;
-
-    @Autowired
-    private ProductRepo productRepo;
-
-    @Autowired
-    private OrderDetailsRepo detailsRepo;
-
-    @Autowired
-    private UserRepo userRepo;
+    private final OrderRepo orderRepo;
+    private final ProductService productService;
+    private final UserRepo userRepo;
 
     @Transactional
-    public Order createOrder(Long userId, List<OrderDetails> productOrders, double userBudget) throws Exception {
+    public void createOrder(String username, OrderRequest orderRequest) {
+        User user = userRepo.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (productOrders == null || productOrders.isEmpty()) {
-            throw new IllegalArgumentException("Product list cannot be empty.");
-        }
+        List<Long> productIds = orderRequest.getItems().stream()
+                .map(OrderItemRequest::getProductId)
+                .collect(Collectors.toList());
 
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID must not be null.");
-        }
+        List<Product> products = productService.getProductsByIds(productIds);
 
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+        Map<Long, Product> productMap = products.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
 
         Order order = new Order();
-        order.setOrderDate(LocalDateTime.now().toString());
-        order.setStatus("PENDING");
         order.setUser(user);
 
         double totalPrice = 0.0;
 
-        for (OrderDetails orderDetails : productOrders) {
+        for (OrderItemRequest item : orderRequest.getItems()) {
+            Product product = productMap.get(item.getProductId());
 
-            if (orderDetails.getProduct() == null || orderDetails.getProduct().getId() == null) {
-                throw new IllegalArgumentException("Each order must have a valid product ID.");
+            if (product == null) {
+                throw new IllegalStateException("Product not found with ID: " + item.getProductId());
             }
 
-            Product product = productRepo.findById(orderDetails.getProduct().getId())
-                    .orElseThrow(() -> new RuntimeException("Product Not Found"));
-
-            if (product.getQuantity() < orderDetails.getQuantity()) {
-                throw new IllegalStateException("Not enough stock for product ID: " + product.getId());
+            if (product.getQuantity() < item.getQuantity()) {
+                throw new IllegalStateException("Not enough stock for product: " + product.getName());
             }
 
-            double productTotal = product.getPrice() * orderDetails.getQuantity();
-            totalPrice += productTotal;
+            product.setQuantity(product.getQuantity() - item.getQuantity());
 
-            product.setQuantity(product.getQuantity() - orderDetails.getQuantity());
-            productRepo.save(product);
+            OrderDetails orderDetails = new OrderDetails();
+            orderDetails.setOrder(order);
+            orderDetails.setProduct(product);
+            orderDetails.setQuantity(item.getQuantity());
+            orderDetails.setUnitPrice(product.getPrice());
 
-            OrderDetails orderDetails1 = new OrderDetails();
-            orderDetails1.setOrder(order);
-            orderDetails1.setProduct(product);
-            orderDetails1.setQuantity(orderDetails.getQuantity());
-            orderDetails1.setUnitPrice(productTotal);
+            order.getOrderDetails().add(orderDetails);
 
-            order.getOrderDetails().add(orderDetails1);
-        }
-
-        if (userBudget < totalPrice) {
-            throw new IllegalArgumentException("Insufficient funds! Total price is " + totalPrice + ", but you provided " + userBudget);
+            totalPrice += product.getPrice() * item.getQuantity();
         }
 
         order.setTotalPrice(totalPrice);
 
-        order = orderRepo.save(order);
-        detailsRepo.saveAll(order.getOrderDetails());
+        orderRepo.save(order);
+    }
+    public List<Order> getOrdersByUsername(String username) {
+        User user = userRepo.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new RuntimeException("User Not Found"));
+        return orderRepo.findByUser(user);
+    }
+    public Order getOrderById(Long orderId, String username) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUser().getUsername().equalsIgnoreCase(username)) {
+            throw new RuntimeException("You are not authorized to view this order");
+        }
 
         return order;
     }
 
-    public User getUserByUsername(String username) {
-        return userRepo.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
-    }
-
     @Transactional
     public void deleteOrder(Long orderId) {
-        if (!orderRepo.existsById(orderId)) {
-            throw new RuntimeException("Order Not Found");
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order Not Found"));
+
+        for (OrderDetails details : order.getOrderDetails()) {
+            Product product = details.getProduct();
+            product.setQuantity(product.getQuantity() + details.getQuantity());
+            productService.saveProduct(product);
         }
-        orderRepo.deleteById(orderId);
+
+        orderRepo.delete(order);
     }
 }
