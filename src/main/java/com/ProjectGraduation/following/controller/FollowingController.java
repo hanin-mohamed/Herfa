@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/following")
+@RequestMapping("/follow")
 @RequiredArgsConstructor
 public class FollowingController {
 
@@ -46,7 +46,7 @@ public class FollowingController {
 
         return ResponseEntity.ok(followingService.getFollowers(merchant));
     }
-    @GetMapping("/following")
+    @GetMapping("/followings")
     public ResponseEntity<?> getFollowing(@RequestHeader("Authorization") String token) {
         String username = jwtService.getUsername(token);
         User follower = userService.getUserByUsername(username);

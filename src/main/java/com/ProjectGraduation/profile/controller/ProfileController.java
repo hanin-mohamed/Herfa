@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/profile")
+@RequestMapping("/profiles")
 @RequiredArgsConstructor
 public class ProfileController {
 
@@ -29,7 +29,7 @@ public class ProfileController {
         return ResponseEntity.ok(profile);
     }
 
-    @PatchMapping
+    @PutMapping
     public ResponseEntity<Profile> updateMyProfile(@RequestHeader("Authorization") String token,
                                                    @RequestBody UpdateProfileRequestDTO updateRequest) {
         String username = jwtService.getUsername(token);

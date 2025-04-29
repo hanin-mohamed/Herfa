@@ -12,7 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/rating")
+@RequestMapping("/ratings")
 @RequiredArgsConstructor
 public class ProductRatingController {
 

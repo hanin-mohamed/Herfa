@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/profile-rating")
+@RequestMapping("/profile-ratings")
 @RequiredArgsConstructor
 public class ProfileRatingController {
 

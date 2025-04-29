@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/category")
+@RequestMapping("/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 
@@ -24,7 +24,7 @@ public class CategoryController {
 
     }
 
-    @GetMapping()
+    @GetMapping
     public List<Category> getAllCategory (){
         return service.getAllCategory() ;
     }

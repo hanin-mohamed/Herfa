@@ -2,6 +2,8 @@ package com.ProjectGraduation.order.service;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.coupons.entity.Coupon;
+import com.ProjectGraduation.coupons.service.CouponService;
 import com.ProjectGraduation.order.dto.OrderRequest;
 import com.ProjectGraduation.order.dto.OrderItemRequest;
 import com.ProjectGraduation.order.entity.Order;
@@ -14,6 +16,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +28,7 @@ public class OrderService {
     private final OrderRepo orderRepo;
     private final ProductService productService;
     private final UserRepo userRepo;
+    private final CouponService couponService;
 
     @Transactional
     public void createOrder(String username, OrderRequest orderRequest) {
@@ -64,20 +68,31 @@ public class OrderService {
             orderDetails.setQuantity(item.getQuantity());
             orderDetails.setUnitPrice(product.getPrice());
 
-            order.getOrderDetails().add(orderDetails);
+            double itemPrice = product.getPrice() * item.getQuantity();
 
-            totalPrice += product.getPrice() * item.getQuantity();
+            if (item.getCouponCode() != null && !item.getCouponCode().isEmpty()) {
+                double discount = couponService.applyCouponToProduct(product, item.getQuantity(), item.getCouponCode());
+                itemPrice -= discount;
+                itemPrice = Math.max(itemPrice, 0);
+                couponService.confirmCouponUsage(item.getCouponCode());
+                 Coupon coupon = couponService.getCouponByCode(item.getCouponCode());
+                 orderDetails.setCoupon(coupon);
+            }
+
+            totalPrice += itemPrice;
+            order.getOrderDetails().add(orderDetails);
         }
 
-        order.setTotalPrice(totalPrice);
-
+        order.setTotalPrice(Math.max(totalPrice, 0));
         orderRepo.save(order);
     }
+
     public List<Order> getOrdersByUsername(String username) {
         User user = userRepo.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new RuntimeException("User Not Found"));
         return orderRepo.findByUser(user);
     }
+
     public Order getOrderById(Long orderId, String username) {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -88,7 +103,6 @@ public class OrderService {
 
         return order;
     }
-
     @Transactional
     public void deleteOrder(Long orderId) {
         Order order = orderRepo.findById(orderId)

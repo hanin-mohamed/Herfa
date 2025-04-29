@@ -1,5 +1,6 @@
 package com.ProjectGraduation.order.entity;
 
+import com.ProjectGraduation.coupons.entity.Coupon;
 import com.ProjectGraduation.product.entity.Product;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -28,6 +29,9 @@ public class OrderDetails {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+    @ManyToOne
+    @JoinColumn(name = "coupon_id")
+    private Coupon coupon;
 
     private int quantity;
 

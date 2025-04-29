@@ -48,7 +48,7 @@ public class Product {
     @JsonIgnore
     private User user;
 
-    @ManyToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product")
     @JsonIgnore
     private Set<OrderDetails> orderDetails;
 
