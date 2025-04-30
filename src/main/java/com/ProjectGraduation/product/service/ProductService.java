@@ -126,7 +126,7 @@ public class ProductService {
     }
 
     public List<Product> getMerchantProducts(User user) {
-        return repo.findAllByUserId(user);
+        return repo.findAllByUser(user);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.ProjectGraduation.profile.entity;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class Profile {
     private String address;
     private String bio;
     private String profilePictureUrl;
+    @JsonIgnore
     @OneToOne(cascade = CascadeType.ALL)
     private User user;
 

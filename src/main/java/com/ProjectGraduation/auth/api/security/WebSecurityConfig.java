@@ -24,10 +24,13 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register/**", "/auth/login/**",
                                 "/auth/me/**", "/auth/verify/**","/auth/forgotPassword/**",
-                                "/auth/reset/**","/auth/resend/**"
+                                "/auth/reset/**","/auth/resend/**",  "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll() // Public endpoints
                         .requestMatchers("/demo1","/AllActiveProduct").hasAuthority("ROLE_USER") // Restrict demo1 to USER
                         .requestMatchers("/demo2").hasAuthority("ROLE_MERCHANT") // Restrict demo2 to MERCHANT
+                        .requestMatchers("/profiles/**").authenticated()
                         .anyRequest().authenticated() // All other requests require authentication
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
