@@ -89,6 +89,7 @@ public class ProfileService {
         }
     }
 
+
     public Profile getProfileByUserId(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -96,6 +97,9 @@ public class ProfileService {
         return profileRepo.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Profile not found for this user"));
     }
+
+
+
     @Transactional
     public ProfileWithProductsDTO getProfileWithProducts(Long userId) {
         User user = userRepo.findById(userId)
