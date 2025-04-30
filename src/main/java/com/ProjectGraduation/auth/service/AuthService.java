@@ -4,10 +4,13 @@ import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.exception.OtpStillValidException;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -32,14 +35,32 @@ public class AuthService {
         return String.format("%0" + OTP_LENGTH + "d", random.nextInt((int) Math.pow(10, OTP_LENGTH)));
     }
 
-    private void sendOtpEmail(String email, String subject, String text) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("mf7373057@gmail.com");
-        message.setTo(email);
-        message.setSubject(subject);
-        message.setText(text);
+    private void sendOtpEmail(String email, String subject, String text) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom("Herfa App <mf7373057@gmail.com>");
+        helper.setTo(email);
+        helper.setSubject(subject);
+        helper.setReplyTo("mf7373057@gmail.com"); // جديد
+
+        String htmlContent = "<html><body>"
+                + "<h2>Verification Code</h2>"
+                + "<p>Your OTP code is:</p>"
+                + "<p style='font-size: 22px; font-weight: bold; color: #333;'>" + text + "</p>"
+                + "<p>This code will expire in 10 minutes.</p>"
+                + "</body></html>";
+
+        helper.setText(htmlContent, true);
+
+        // تحسين الهيدر
+        message.addHeader("X-Mailer", "Spring Boot Mailer");
+        message.addHeader("Importance", "High");
+        // message.addHeader("Precedence", "bulk"); // احذفي دي خالص
+
         mailSender.send(message);
     }
+
 
     public void generateAndSendOtp(String email) {
         User user = repo.findByEmailIgnoreCase(email)
@@ -50,7 +71,11 @@ public class AuthService {
         user.setOtpExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
         repo.save(user);
 
-        sendOtpEmail(email, "Your OTP Code", "Your OTP code is: " + otp + "\nIt expires in " + OTP_EXPIRATION_MINUTES + " minutes.");
+        try {
+            sendOtpEmail(email, "Your Verification Code", otp);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send OTP email", e);
+        }
     }
 
     public boolean verifyOtp(String email, String otp) {
@@ -80,7 +105,11 @@ public class AuthService {
         user.setResetOtpExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
         repo.save(user);
 
-        sendOtpEmail(email, "Password Reset OTP", "Your OTP for password reset is: " + otp + "\nExpires in " + OTP_EXPIRATION_MINUTES + " minutes.");
+        try {
+            sendOtpEmail(email, "Password Reset OTP", "Your OTP for password reset is: " + otp + "\nExpires in " + OTP_EXPIRATION_MINUTES + " minutes.");
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean verifyResetOtp(String email, String otp) {
@@ -122,6 +151,10 @@ public class AuthService {
         user.setOtpExpiration(LocalDateTime.now().plusMinutes(OTP_EXPIRATION_MINUTES));
         repo.save(user);
 
-        sendOtpEmail(email, "New OTP Code", "Your new OTP code is: " + newOtp + "\nIt expires in " + OTP_EXPIRATION_MINUTES + " minutes.");
+        try {
+            sendOtpEmail(email, "New OTP Code", "Your new OTP code is: " + newOtp + "\nIt expires in " + OTP_EXPIRATION_MINUTES + " minutes.");
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

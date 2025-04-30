@@ -9,6 +9,8 @@ import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.service.CategoryService;
 import com.ProjectGraduation.product.service.ProductService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -40,7 +43,7 @@ public class ProductController {
             @RequestPart("quantity") String quantity,
             @RequestPart("active") String active,
             @RequestPart("category_id") String categoryId,
-            @RequestPart("colors") List<String> colors) {
+            @RequestPart("colors") String colors) {
         try {
             String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
             User user = userService.getUserByUsername(merchantUsername);
@@ -55,7 +58,7 @@ public class ProductController {
             product.setUser(user);
             Category category = categoryService.getCategoryById(Long.parseLong(categoryId));
             product.setCategory(category);
-            product.setColors(colors);
+            product.setColors(Collections.singletonList(colors));
             Product savedProduct = productService.addNewProduct(product, file);
             return ResponseEntity.ok(new ApiResponse(true, "Product added successfully", savedProduct));
         } catch (InvalidProductDataException | UnauthorizedMerchantException | CategoryNotFoundException ex) {
@@ -80,7 +83,7 @@ public class ProductController {
             @RequestPart("quantity") String quantity,
             @RequestPart("active") String active,
             @RequestPart("category_id") String categoryId,
-            @RequestPart("colors") List<String> colors) {
+            @RequestPart("colors") String colors) {
         try {
             String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
             User user = userService.getUserByUsername(merchantUsername);
@@ -93,7 +96,10 @@ public class ProductController {
             product.setQuantity(Integer.parseInt(quantity));
             product.setActive(Boolean.parseBoolean(active));
             product.setUser(user);
-            product.setColors(colors);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<String> color = objectMapper.readValue(colors, new TypeReference<List<String>>() {});
+            product.setColors(color);
             Category category = categoryService.getCategoryById(Long.parseLong(categoryId));
             product.setCategory(category);
 

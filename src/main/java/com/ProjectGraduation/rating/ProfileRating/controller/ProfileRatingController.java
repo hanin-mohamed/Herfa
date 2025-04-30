@@ -19,6 +19,7 @@ public class ProfileRatingController {
     private final ProfileRatingService profileRatingService;
     private final JWTService jwtService;
     private final UserService userService;
+
     @PostMapping("/{ratedUserId}")
     public ResponseEntity<String> rateUser(@RequestHeader("Authorization") String token,
                                            @PathVariable Long ratedUserId,

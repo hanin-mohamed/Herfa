@@ -87,6 +87,8 @@ public class ProductService {
         existingProduct.setCategory(product.getCategory());
         existingProduct.setActive(product.getActive());
 
+        existingProduct.setColors(product.getColors());
+
         return productRepo.save(existingProduct);
     }
 
