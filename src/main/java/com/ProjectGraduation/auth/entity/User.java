@@ -74,15 +74,6 @@ public class User {
     @JsonIgnore
     private List<Product> savedProducts = new ArrayList<>();
 
-    // @ManyToMany
-    // @JoinTable(
-    //     name = "user_interests",
-    //     joinColumns = @JoinColumn(name = "user_id"),
-    //     inverseJoinColumns = @JoinColumn(name = "merchant_id")
-    // )
-    // @JsonIgnore
-    // private List<Merchant> interestedMerchants = new ArrayList<>();
-
     @ManyToMany
     @JoinTable(
             name = "user_fav_products",

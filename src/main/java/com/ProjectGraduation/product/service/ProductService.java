@@ -1,6 +1,8 @@
 package com.ProjectGraduation.product.service;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.offer.entity.Offer;
+import com.ProjectGraduation.offer.service.OfferService;
 import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
@@ -24,7 +26,7 @@ public class ProductService {
     private final ProductRepo repo;
     private final CategoryRepo categoryRepository;
     private final FileService fileService;
-
+    private final OfferService productOfferService;
     @Value("${project.poster}")
     private String path;
 
@@ -98,8 +100,12 @@ public class ProductService {
     }
 
     public Product getById(Long id) {
-        return repo.findById(id)
+        Product product = repo.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
+
+        double discountedPrice = productOfferService.getDiscountedPrice(product);
+        product.setDiscountedPrice(discountedPrice);
+        return product;
     }
 
     public void deleteById(Long productId) throws Exception {

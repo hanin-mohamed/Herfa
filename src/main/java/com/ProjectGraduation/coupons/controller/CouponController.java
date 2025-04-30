@@ -4,6 +4,7 @@ import com.ProjectGraduation.coupons.dto.CouponRequest;
 import com.ProjectGraduation.coupons.entity.Coupon;
 import com.ProjectGraduation.coupons.service.CouponService;
 import com.ProjectGraduation.product.entity.Product;
+import com.ProjectGraduation.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +16,7 @@ import java.util.List;
 public class CouponController {
 
     private final CouponService couponService;
-
+    private final ProductService productService;
     @PostMapping
     public Coupon createCoupon(@RequestBody CouponRequest request) {
         return couponService.createCoupon(request);
@@ -40,10 +41,11 @@ public class CouponController {
         return couponService.getAllCoupons();
     }
 
-    @PostMapping("/apply")
-    public double applyCoupon(@RequestParam Product product, @RequestParam int quantity, @RequestParam String code) {
+    public double applyCoupon(@RequestParam Long productId, @RequestParam int quantity, @RequestParam String code) {
+        Product product = productService.getById(productId);
         return couponService.applyCouponToProduct(product, quantity, code);
     }
+
     @DeleteMapping("/{id}")
     public void deleteCoupon(@PathVariable Long id) {
         couponService.deleteCoupon(id);

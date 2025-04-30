@@ -64,5 +64,6 @@ public class Product {
     @JsonIgnore
     private List<Comment> comments;
 
-
+    @Transient
+    private double discountedPrice;
 }

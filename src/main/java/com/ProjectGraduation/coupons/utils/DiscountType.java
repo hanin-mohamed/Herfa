@@ -2,5 +2,6 @@ package com.ProjectGraduation.coupons.utils;
 
 public enum DiscountType {
     PERCENTAGE,
-    AMOUNT
+    AMOUNT,
+    FIXED_PRICE
 }

@@ -130,7 +130,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
+//    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getById(@PathVariable Long id) {
         try {
             Product product = service.getById(id);

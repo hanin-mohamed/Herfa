@@ -67,17 +67,17 @@ public class OrderService {
             orderDetails.setProduct(product);
             orderDetails.setQuantity(item.getQuantity());
             orderDetails.setUnitPrice(product.getPrice());
-
             double itemPrice = product.getPrice() * item.getQuantity();
-
             if (item.getCouponCode() != null && !item.getCouponCode().isEmpty()) {
-                double discount = couponService.applyCouponToProduct(product, item.getQuantity(), item.getCouponCode());
+                Coupon coupon = couponService.getCouponByCode(item.getCouponCode());
+                double itemTotal = product.getPrice() * item.getQuantity();
+                couponService.validateCoupon(coupon, itemTotal, user);
+                double discount = couponService.calculateDiscount(coupon, product, item.getQuantity());
                 itemPrice -= discount;
                 itemPrice = Math.max(itemPrice, 0);
                 couponService.confirmCouponUsage(item.getCouponCode());
-                 Coupon coupon = couponService.getCouponByCode(item.getCouponCode());
-                 orderDetails.setCoupon(coupon);
-            }
+                orderDetails.setCoupon(coupon);
+        }
 
             totalPrice += itemPrice;
             order.getOrderDetails().add(orderDetails);

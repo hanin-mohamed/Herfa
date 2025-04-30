@@ -1,34 +1,27 @@
-package com.ProjectGraduation.coupons.entity;
+package com.ProjectGraduation.offer.entity;
 
-import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.coupons.utils.DiscountType;
-import com.ProjectGraduation.coupons.utils.UserSegment;
 import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "coupons")
-public class Coupon {
+@Builder
+@Table(name = "offers")
+public class Offer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true, nullable = false)
-    private String code;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,34 +32,23 @@ public class Coupon {
 
     private Double maxDiscount;
 
-    private Integer availableQuantity;
-
-    private LocalDateTime expiryDate;
-
     private boolean active = true;
 
-    private Double fixedPrice;
+    private LocalDateTime startDate;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
-    private Double minOrderAmount;
-
-    @Enumerated(EnumType.STRING)
-    private UserSegment userSegment;
+    private LocalDateTime endDate;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "created_by")
-    private User createdBy;
-
-    @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
