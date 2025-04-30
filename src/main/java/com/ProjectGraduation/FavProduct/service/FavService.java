@@ -17,7 +17,6 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class FavService {
 
-
     private final JWTService jwtService ;
 
     private final UserRepo userRepo ;

@@ -27,7 +27,9 @@ public class ProfileRatingService {
 
         User ratedUser = userRepo.findById(ratedUserId)
                 .orElseThrow(() -> new UserNotFoundException("Rated user not found"));
-
+        if (rater.getId().equals(ratedUser.getId())) {
+            throw new IllegalArgumentException("You cannot rate yourself");
+        }
         ProfileRating profileRating = profileRatingRepo.findByRaterAndRatedUser(rater, ratedUser)
                 .orElse(new ProfileRating());
 
