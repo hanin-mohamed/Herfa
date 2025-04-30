@@ -3,7 +3,6 @@ package com.ProjectGraduation.product.service;
 import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.repo.CategoryRepo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,13 +12,15 @@ import java.util.List;
 public class CategoryService {
 
 
-    private final CategoryRepo repo ;
+    private final CategoryRepo categoryRepo;
 
     public Category addNewCategory (Category category) {
-        return repo.save(category) ;
+        return categoryRepo.save(category) ;
     }
     public List<Category>getAllCategory(){
-        return repo.findAll() ;
+        return categoryRepo.findAll() ;
     }
-
+    public Category getCategoryById(Long id){
+        return categoryRepo.findById(id).orElseThrow(() -> new RuntimeException("Category not found with ID: " + id));
+    }
 }

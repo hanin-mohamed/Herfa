@@ -12,8 +12,6 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.active = :active")
     List<Product> findActiveProducts(@Param("active") boolean active);
 
-    @Query("SELECT p FROM Product p WHERE p.category.id = :id")
-    List<Product> findProductsByCategory(@Param("id") Long id);
-
+    List<Product> findByCategoryId(Long categoryId);
     List<Product> findAllByUser(User user);
 }

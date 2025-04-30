@@ -21,14 +21,22 @@ public class ProfileRatingService {
 
     @Transactional
     public void rateUser(Long raterId, Long ratedUserId, int stars, String comment) {
-        if (stars < 1 || stars > 5) {throw new IllegalArgumentException("Stars must be between 1 and 5");}
+        if (stars < 1 || stars > 5) {
+            throw new IllegalArgumentException("Stars must be between 1 and 5");
+        }
+
         User rater = userRepo.findById(raterId)
                 .orElseThrow(() -> new UserNotFoundException("Rater user not found"));
 
         User ratedUser = userRepo.findById(ratedUserId)
                 .orElseThrow(() -> new UserNotFoundException("Rated user not found"));
+
         if (rater.getId().equals(ratedUser.getId())) {
             throw new IllegalArgumentException("You cannot rate yourself");
+        }
+
+        if (!"MERCHANT".equalsIgnoreCase(ratedUser.getRole().name())) {
+            throw new IllegalArgumentException("Only MERCHANT users can be rated");
         }
         ProfileRating profileRating = profileRatingRepo.findByRaterAndRatedUser(rater, ratedUser)
                 .orElse(new ProfileRating());
@@ -40,6 +48,7 @@ public class ProfileRatingService {
 
         profileRatingRepo.save(profileRating);
     }
+
 
     @Transactional
     public double getAverageRating(Long ratedUserId) {

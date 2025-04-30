@@ -1,7 +1,6 @@
 package com.ProjectGraduation.product.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.offer.entity.Offer;
 import com.ProjectGraduation.offer.service.OfferService;
 import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.entity.Product;
@@ -9,9 +8,10 @@ import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.repo.CategoryRepo;
 import com.ProjectGraduation.product.repo.ProductRepo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -23,48 +23,47 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductRepo repo;
-    private final CategoryRepo categoryRepository;
+    private final ProductRepo productRepo;
     private final FileService fileService;
     private final OfferService productOfferService;
     @Value("${project.poster}")
     private String path;
-
-    @Value("${base.url}")
-    private String baseUrl;
-
-
-    public Category getCategoryById(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new CategoryNotFoundException("Category not found with ID: " + id));
-    }
 
     public Product addNewProduct(Product product, MultipartFile file) throws Exception {
         User user = product.getUser();
         if (user == null) {
             throw new InvalidProductDataException("Merchant must be provided for the product");
         }
-        if (!"MERCHANT".equals(user.getRole().toString())) {
+
+        if (!"MERCHANT".equalsIgnoreCase(user.getRole().name())) {
             throw new UnauthorizedMerchantException("Only merchants can add products");
         }
-        if (product.getName() == null || product.getName().isEmpty()) {
+
+        if (product.getName() == null || product.getName().trim().isEmpty()) {
             throw new InvalidProductDataException("Product name cannot be empty");
         }
+
         if (product.getPrice() <= 0) {
             throw new InvalidProductDataException("Price must be greater than zero");
         }
+
         if (file == null || file.isEmpty()) {
             throw new InvalidProductDataException("Product image file is required");
         }
 
-        String uploadedFileName = fileService.uploadFile(path, file, product.getUser().getId(), "product", product.getName());
+        String uploadedFileName = fileService.uploadFile(path, file, user.getId(), "product", product.getName());
         product.setMedia(uploadedFileName);
 
-        return repo.save(product);
+        if (product.getColors() == null || product.getColors().isEmpty()) {
+            product.setColors(List.of(" "));
+        }
+
+        return productRepo.save(product);
     }
 
+
     public Product updateProduct(Long productId, Product product, MultipartFile file) throws Exception {
-        Product existingProduct = repo.findById(productId)
+        Product existingProduct = productRepo.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
 
         User user = product.getUser();
@@ -88,19 +87,19 @@ public class ProductService {
         existingProduct.setCategory(product.getCategory());
         existingProduct.setActive(product.getActive());
 
-        return repo.save(existingProduct);
+        return productRepo.save(existingProduct);
     }
 
     public List<Product> getAllActiveProduct() {
-        return repo.findActiveProducts(true);
+        return productRepo.findActiveProducts(true);
     }
 
     public List<Product> getAllProduct() {
-        return repo.findAll();
+        return productRepo.findAll();
     }
 
     public Product getById(Long id) {
-        Product product = repo.findById(id)
+        Product product = productRepo.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
 
         double discountedPrice = productOfferService.getDiscountedPrice(product);
@@ -109,24 +108,42 @@ public class ProductService {
     }
 
     public void deleteById(Long productId) throws Exception {
-        Product product = repo.findById(productId)
+        Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
         Files.deleteIfExists(Paths.get(path + File.separator + product.getMedia()));
-        repo.delete(product);
+        productRepo.delete(product);
     }
 
-    public List<Product> getProductsByCategory(Long categoryId) {
-        return repo.findProductsByCategory(categoryId);
-    }
     public List<Product> getProductsByIds(List<Long> ids) {
-        return repo.findAllById(ids);
+        return productRepo.findAllById(ids);
     }
     public void saveProduct(Product product) {
-        repo.save(product);
+        productRepo.save(product);
     }
 
     public List<Product> getMerchantProducts(User user) {
-        return repo.findAllByUser(user);
+        return productRepo.findAllByUser(user);
     }
+    public List<Product> filterByCategoryId(Long id) {
+        return productRepo.findByCategoryId(id);
+    }
+
+    public List<Product> filterByColor(String color) {
+        List<Product> all = productRepo.findActiveProducts(true);
+        if (color == null || color.isBlank()) return all;
+
+        return all.stream()
+                .filter(p -> p.getColors() != null &&
+                        p.getColors().stream().anyMatch(c -> c.equalsIgnoreCase(color)))
+                .toList();
+    }
+
+    public List<Product> filterByPriceRange(Double min, Double max) {
+        return productRepo.findActiveProducts(true).stream()
+                .filter(p -> (min == null || p.getPrice() >= min) &&
+                        (max == null || p.getPrice() <= max))
+                .toList();
+    }
+
 
 }

@@ -7,9 +7,9 @@ import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.product.entity.Category;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
+import com.ProjectGraduation.product.service.CategoryService;
 import com.ProjectGraduation.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,9 +23,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService service;
+    private final ProductService productService;
     private final JWTService jwtService;
     private final UserService userService;
+    private final CategoryService categoryService;
 
     @PostMapping()
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
@@ -38,7 +39,8 @@ public class ProductController {
             @RequestPart("price") String price,
             @RequestPart("quantity") String quantity,
             @RequestPart("active") String active,
-            @RequestPart("category_id") String categoryId) {
+            @RequestPart("category_id") String categoryId,
+            @RequestPart("colors") List<String> colors) {
         try {
             String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
             User user = userService.getUserByUsername(merchantUsername);
@@ -51,11 +53,10 @@ public class ProductController {
             product.setQuantity(Integer.parseInt(quantity));
             product.setActive(Boolean.parseBoolean(active));
             product.setUser(user);
-
-            Category category = service.getCategoryById(Long.parseLong(categoryId));
+            Category category = categoryService.getCategoryById(Long.parseLong(categoryId));
             product.setCategory(category);
-
-            Product savedProduct = service.addNewProduct(product, file);
+            product.setColors(colors);
+            Product savedProduct = productService.addNewProduct(product, file);
             return ResponseEntity.ok(new ApiResponse(true, "Product added successfully", savedProduct));
         } catch (InvalidProductDataException | UnauthorizedMerchantException | CategoryNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -78,7 +79,8 @@ public class ProductController {
             @RequestPart("price") String price,
             @RequestPart("quantity") String quantity,
             @RequestPart("active") String active,
-            @RequestPart("category_id") String categoryId) {
+            @RequestPart("category_id") String categoryId,
+            @RequestPart("colors") List<String> colors) {
         try {
             String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
             User user = userService.getUserByUsername(merchantUsername);
@@ -91,11 +93,11 @@ public class ProductController {
             product.setQuantity(Integer.parseInt(quantity));
             product.setActive(Boolean.parseBoolean(active));
             product.setUser(user);
-
-            Category category = service.getCategoryById(Long.parseLong(categoryId));
+            product.setColors(colors);
+            Category category = categoryService.getCategoryById(Long.parseLong(categoryId));
             product.setCategory(category);
 
-            Product updatedProduct = service.updateProduct(Long.parseLong(productId), product, file);
+            Product updatedProduct = productService.updateProduct(Long.parseLong(productId), product, file);
             return ResponseEntity.ok(new ApiResponse(true, "Product updated successfully", updatedProduct));
         } catch (ProductNotFoundException | UnauthorizedMerchantException | CategoryNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -109,7 +111,7 @@ public class ProductController {
     @GetMapping("/active")
     public ResponseEntity<ApiResponse> getAllActiveProduct() {
         try {
-            List<Product> products = service.getAllActiveProduct();
+            List<Product> products = productService.getAllActiveProduct();
             return ResponseEntity.ok(new ApiResponse(true, "Active products retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -121,7 +123,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getAllProduct() {
         try {
-            List<Product> products = service.getAllProduct();
+            List<Product> products = productService.getAllProduct();
             return ResponseEntity.ok(new ApiResponse(true, "All products retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -130,10 +132,9 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-//    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getById(@PathVariable Long id) {
         try {
-            Product product = service.getById(id);
+            Product product = productService.getById(id);
             return ResponseEntity.ok(new ApiResponse(true, "Product retrieved successfully", product));
         } catch (ProductNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -151,13 +152,13 @@ public class ProductController {
             String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
             User user = userService.getUserByUsername(merchantUsername);
 
-            Product product = service.getById(id);
+            Product product = productService.getById(id);
             if (!product.getUser().getId().equals(user.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new ApiResponse(false, "You are not authorized to delete this product", null));
             }
 
-            service.deleteById(id);
+            productService.deleteById(id);
             return ResponseEntity.ok(new ApiResponse(true, "Product deleted successfully", null));
         } catch (ProductNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -168,15 +169,24 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/category/{id}")
-    public ResponseEntity<ApiResponse> getProductsByCategory(@PathVariable Long id) {
+    @GetMapping("/filter/category/{categoryId}")
+    public ResponseEntity<ApiResponse> filterByCategoryId(@PathVariable Long categoryId) {
         try {
-            List<Product> products = service.getProductsByCategory(id);
+            List<Product> products = productService.filterByCategoryId(categoryId);
             return ResponseEntity.ok(new ApiResponse(true, "Products by category retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(false, "Failed to retrieve products by category: " + ex.getMessage(), null));
         }
-
     }
+    @GetMapping("/filter/color")
+    public ResponseEntity<List<Product>> filterByColor(@RequestParam String color) {
+        return ResponseEntity.ok(productService.filterByColor(color));
+    }
+    @GetMapping("/filter/price")
+    public ResponseEntity<List<Product>> filterByPrice(@RequestParam(required = false) Double min,
+                                                       @RequestParam(required = false) Double max) {
+        return ResponseEntity.ok(productService.filterByPriceRange(min, max));
+    }
+
 }

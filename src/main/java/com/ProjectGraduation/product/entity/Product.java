@@ -64,6 +64,11 @@ public class Product {
     @JsonIgnore
     private List<Comment> comments;
 
+    @ElementCollection
+    @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "color")
+    private List<String> colors;
+
     @Transient
     private double discountedPrice;
 }
