@@ -1,31 +1,29 @@
 package com.ProjectGraduation.product.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.offer.service.OfferService;
-import com.ProjectGraduation.product.entity.Category;
+import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
-import com.ProjectGraduation.product.repo.CategoryRepo;
-import com.ProjectGraduation.product.repo.ProductRepo;
+import com.ProjectGraduation.product.repo.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductRepo productRepo;
+    private final ProductRepository productRepository;
     private final FileService fileService;
-    private final OfferService productOfferService;
+    private final ProductOfferService productOfferService;
     @Value("${project.poster}")
     private String path;
 
@@ -58,12 +56,12 @@ public class ProductService {
             product.setColors(List.of(" "));
         }
 
-        return productRepo.save(product);
+        return productRepository.save(product);
     }
 
 
     public Product updateProduct(Long productId, Product product, MultipartFile file) throws Exception {
-        Product existingProduct = productRepo.findById(productId)
+        Product existingProduct = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
 
         User user = product.getUser();
@@ -89,19 +87,19 @@ public class ProductService {
 
         existingProduct.setColors(product.getColors());
 
-        return productRepo.save(existingProduct);
+        return productRepository.save(existingProduct);
     }
 
     public List<Product> getAllActiveProduct() {
-        return productRepo.findActiveProducts(true);
+        return productRepository.findActiveProducts(true);
     }
 
     public List<Product> getAllProduct() {
-        return productRepo.findAll();
+        return productRepository.findAll();
     }
 
     public Product getById(Long id) {
-        Product product = productRepo.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
 
         double discountedPrice = productOfferService.getDiscountedPrice(product);
@@ -110,28 +108,28 @@ public class ProductService {
     }
 
     public void deleteById(Long productId) throws Exception {
-        Product product = productRepo.findById(productId)
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
         Files.deleteIfExists(Paths.get(path + File.separator + product.getMedia()));
-        productRepo.delete(product);
+        productRepository.delete(product);
     }
 
     public List<Product> getProductsByIds(List<Long> ids) {
-        return productRepo.findAllById(ids);
+        return productRepository.findAllById(ids);
     }
     public void saveProduct(Product product) {
-        productRepo.save(product);
+        productRepository.save(product);
     }
 
     public List<Product> getMerchantProducts(User user) {
-        return productRepo.findAllByUser(user);
+        return productRepository.findAllByUser(user);
     }
     public List<Product> filterByCategoryId(Long id) {
-        return productRepo.findByCategoryId(id);
+        return productRepository.findByCategoryId(id);
     }
 
     public List<Product> filterByColor(String color) {
-        List<Product> all = productRepo.findActiveProducts(true);
+        List<Product> all = productRepository.findActiveProducts(true);
         if (color == null || color.isBlank()) return all;
 
         return all.stream()
@@ -141,10 +139,19 @@ public class ProductService {
     }
 
     public List<Product> filterByPriceRange(Double min, Double max) {
-        return productRepo.findActiveProducts(true).stream()
+        return productRepository.findActiveProducts(true).stream()
                 .filter(p -> (min == null || p.getPrice() >= min) &&
                         (max == null || p.getPrice() <= max))
                 .toList();
+    }
+    public Map<Long, Product> getProductsMapByIds(List<Long> ids) {
+        return productRepository.findAllById(ids)
+                .stream()
+                .collect(Collectors.toMap(Product::getId, p -> {
+                    double discountedPrice = productOfferService.getDiscountedPrice(p);
+                    p.setDiscountedPrice(discountedPrice);
+                    return p;
+                }));
     }
 
 

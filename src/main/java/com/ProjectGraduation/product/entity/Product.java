@@ -1,9 +1,10 @@
 package com.ProjectGraduation.product.entity;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.category.entity.Category;
 import com.ProjectGraduation.comment.entity.Comment;
+import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
 import com.ProjectGraduation.order.entity.OrderDetails;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,8 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -71,4 +70,9 @@ public class Product {
 
     @Transient
     private double discountedPrice;
+
+    @ManyToOne
+    @JoinColumn(name = "offer_id")
+    private ProductOffer productOffer;
+
 }

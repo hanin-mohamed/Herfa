@@ -4,9 +4,8 @@ import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.product.entity.Product;
-import com.ProjectGraduation.product.repo.ProductRepo;
+import com.ProjectGraduation.product.repo.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +20,7 @@ public class FavService {
 
     private final UserRepo userRepo ;
 
-    private final ProductRepo repo ;
+    private final ProductRepository repo ;
 
 
     @Transactional

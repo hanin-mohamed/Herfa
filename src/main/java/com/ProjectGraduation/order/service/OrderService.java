@@ -2,21 +2,22 @@ package com.ProjectGraduation.order.service;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.entity.repo.UserRepo;
-import com.ProjectGraduation.coupons.entity.Coupon;
-import com.ProjectGraduation.coupons.service.CouponService;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import com.ProjectGraduation.offers.autoOffers.service.AutoOfferService;
+import com.ProjectGraduation.offers.coupons.entity.Coupon;
+import com.ProjectGraduation.offers.coupons.service.CouponService;
+import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
 import com.ProjectGraduation.order.dto.OrderRequest;
 import com.ProjectGraduation.order.dto.OrderItemRequest;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.entity.OrderDetails;
-import com.ProjectGraduation.order.repo.OrderRepo;
+import com.ProjectGraduation.order.repository.OrderRepo;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.service.ProductService;
-import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,6 +30,8 @@ public class OrderService {
     private final ProductService productService;
     private final UserRepo userRepo;
     private final CouponService couponService;
+    private final ProductOfferService productOfferService;
+    private final AutoOfferService autoOfferService;
 
     @Transactional
     public void createOrder(String username, OrderRequest orderRequest) {
@@ -39,26 +42,15 @@ public class OrderService {
                 .map(OrderItemRequest::getProductId)
                 .collect(Collectors.toList());
 
-        List<Product> products = productService.getProductsByIds(productIds);
-
-        Map<Long, Product> productMap = products.stream()
-                .collect(Collectors.toMap(Product::getId, p -> p));
+        Map<Long, Product> productMap = productService.getProductsMapByIds(productIds);
 
         Order order = new Order();
         order.setUser(user);
-
         double totalPrice = 0.0;
 
         for (OrderItemRequest item : orderRequest.getItems()) {
             Product product = productMap.get(item.getProductId());
-
-            if (product == null) {
-                throw new IllegalStateException("Product not found with ID: " + item.getProductId());
-            }
-
-            if (product.getQuantity() < item.getQuantity()) {
-                throw new IllegalStateException("Not enough stock for product: " + product.getName());
-            }
+            validateProductAvailability(product, item.getQuantity());
 
             product.setQuantity(product.getQuantity() - item.getQuantity());
 
@@ -66,25 +58,42 @@ public class OrderService {
             orderDetails.setOrder(order);
             orderDetails.setProduct(product);
             orderDetails.setQuantity(item.getQuantity());
-            orderDetails.setUnitPrice(product.getPrice());
-            double itemPrice = product.getPrice() * item.getQuantity();
-            if (item.getCouponCode() != null && !item.getCouponCode().isEmpty()) {
-                Coupon coupon = couponService.getCouponByCode(item.getCouponCode());
-                double itemTotal = product.getPrice() * item.getQuantity();
-                couponService.validateCoupon(coupon, itemTotal, user);
-                double discount = couponService.calculateDiscount(coupon, product, item.getQuantity());
-                itemPrice -= discount;
-                itemPrice = Math.max(itemPrice, 0);
-                couponService.confirmCouponUsage(item.getCouponCode());
-                orderDetails.setCoupon(coupon);
-        }
 
+            double itemPrice = calculateFinalItemPrice(product, item.getQuantity(), item.getCouponCode(), orderDetails);
             totalPrice += itemPrice;
+
             order.getOrderDetails().add(orderDetails);
         }
 
         order.setTotalPrice(Math.max(totalPrice, 0));
         orderRepo.save(order);
+    }
+
+    private void validateProductAvailability(Product product, int quantity) {
+        if (product == null) {
+            throw new IllegalStateException("Product not found.");
+        }
+        if (product.getQuantity() < quantity) {
+            throw new IllegalStateException("Not enough stock for product: " + product.getName());
+        }
+    }
+
+    private double calculateFinalItemPrice(Product product, int quantity, String couponCode, OrderDetails orderDetails) {
+        double unitPrice = product.getDiscountedPrice();
+        orderDetails.setUnitPrice(unitPrice);
+
+        double itemPrice = unitPrice * quantity;
+
+        if (couponCode != null && !couponCode.isEmpty()) {
+            double discount = couponService.applyCouponToProduct(product, quantity, couponCode);
+            itemPrice -= discount;
+            itemPrice = Math.max(itemPrice, 0);
+            couponService.confirmCouponUsage(couponCode);
+            Coupon coupon = couponService.getCouponByCode(couponCode);
+            orderDetails.setCoupon(coupon);
+        }
+
+        return itemPrice;
     }
 
     public List<Order> getOrdersByUsername(String username) {
@@ -103,6 +112,7 @@ public class OrderService {
 
         return order;
     }
+
     @Transactional
     public void deleteOrder(Long orderId) {
         Order order = orderRepo.findById(orderId)

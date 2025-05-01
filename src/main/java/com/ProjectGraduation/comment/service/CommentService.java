@@ -5,7 +5,7 @@ import com.ProjectGraduation.auth.entity.repo.UserRepo;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.repo.CommentRepo;
 import com.ProjectGraduation.product.entity.Product;
-import com.ProjectGraduation.product.repo.ProductRepo;
+import com.ProjectGraduation.product.repo.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +18,13 @@ public class CommentService {
     @Autowired
     private CommentRepo repo ;
     @Autowired
-    private ProductRepo productRepo ;
+    private ProductRepository productRepository;
     @Autowired
     private UserRepo userRepo ;
 
     public Comment addComment(Long userId , Long productId , String content){
         Optional<User>userOptional = userRepo.findById(userId) ;
-        Optional<Product>productOptional = productRepo.findById(productId);
+        Optional<Product>productOptional = productRepository.findById(productId);
         if (userOptional.isEmpty()||productOptional.isEmpty()){
             throw new RuntimeException("User Or Product not found ") ;
         }
@@ -33,7 +33,7 @@ public class CommentService {
     }
 
     public List<Comment> getCommentByProductId(Long productId){
-        Optional<Product>productOptional = productRepo.findById(productId);
+        Optional<Product>productOptional = productRepository.findById(productId);
 
         if (productOptional.isEmpty()){
             throw new RuntimeException("Product not Found") ;
