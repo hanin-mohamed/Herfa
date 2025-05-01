@@ -69,7 +69,6 @@ public class CouponService {
         coupon.setExpiryDate(request.getExpiryDate());
         coupon.setActive(request.getIsActive() != null ? request.getIsActive() : true);
         coupon.setProduct(product);
-        coupon.setUserSegment(request.getUserSegment());
         coupon.setCreatedBy(merchant);
 
         return couponRepository.save(coupon);
@@ -92,8 +91,6 @@ public class CouponService {
         if (request.getExpiryDate() != null) coupon.setExpiryDate(request.getExpiryDate());
         if (request.getIsActive() != null) coupon.setActive(request.getIsActive());
         if (request.getProduct() != null) coupon.setProduct(request.getProduct());
-        if (request.getUserSegment() != null) coupon.setUserSegment(request.getUserSegment());
-
         return couponRepository.save(coupon);
     }
 
