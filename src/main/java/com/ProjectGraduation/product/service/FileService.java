@@ -22,6 +22,7 @@ public class FileService {
             throw new FileUploadException("Invalid file name.");
         }
 
+
         String extension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
         if (!extension.equals(".jpg") && !extension.equals(".png") && !extension.equals(".mp4")) {
             throw new FileUploadException("Unsupported file type. Only .jpg, .png, and .mp4 are allowed.");
@@ -45,8 +46,15 @@ public class FileService {
             directory.mkdirs();
         }
 
+        String sanitizedName = name.replaceAll("[^\\p{ASCII}]", "_")
+                .replaceAll("[\\\\/:*?\"<>|]", "_");
+
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String safeFileName = name + timestamp + extension;
+        String safeFileName = sanitizedName + timestamp + extension;
+//
+//        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+//        String safeFileName = name + timestamp + extension;
+
         String filePath = fullPath + File.separator + safeFileName;
 
         Files.copy(file.getInputStream(), Paths.get(filePath));
