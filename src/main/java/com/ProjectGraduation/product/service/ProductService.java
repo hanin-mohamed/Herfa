@@ -1,7 +1,7 @@
 package com.ProjectGraduation.product.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
+import com.ProjectGraduation.offers.productoffers.service.ProductOfferService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.repo.ProductRepository;
@@ -14,8 +14,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

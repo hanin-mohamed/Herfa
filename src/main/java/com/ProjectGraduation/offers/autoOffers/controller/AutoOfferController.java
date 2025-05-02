@@ -1,6 +1,6 @@
 package com.ProjectGraduation.offers.autoOffers.controller;
 
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.offers.autoOffers.dto.AutoOfferRequest;

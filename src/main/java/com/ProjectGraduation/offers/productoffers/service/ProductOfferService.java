@@ -1,11 +1,11 @@
-package com.ProjectGraduation.offers.productoffer.service;
+package com.ProjectGraduation.offers.productoffers.service;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.offers.coupons.utils.DiscountType;
-import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
-import com.ProjectGraduation.offers.productoffer.entity.ProductOfferUsage;
-import com.ProjectGraduation.offers.productoffer.repository.ProductOfferRepository;
-import com.ProjectGraduation.offers.productoffer.repository.ProductOfferUsageRepository;
+import com.ProjectGraduation.offers.productoffers.entity.ProductOffer;
+import com.ProjectGraduation.offers.productoffers.entity.ProductOfferUsage;
+import com.ProjectGraduation.offers.productoffers.repository.ProductOfferRepository;
+import com.ProjectGraduation.offers.productoffers.repository.ProductOfferUsageRepository;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.product.entity.Product;
 import lombok.RequiredArgsConstructor;

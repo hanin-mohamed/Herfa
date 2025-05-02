@@ -1,6 +1,6 @@
 package com.ProjectGraduation.product.controller;
 
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;

@@ -3,7 +3,6 @@ package com.ProjectGraduation.product.entity;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.category.entity.Category;
 import com.ProjectGraduation.comment.entity.Comment;
-import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
 import com.ProjectGraduation.order.entity.OrderDetails;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

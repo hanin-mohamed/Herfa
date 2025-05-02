@@ -1,6 +1,6 @@
-package com.ProjectGraduation.offers.productoffer.repository;
+package com.ProjectGraduation.offers.productoffers.repository;
 
-import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
+import com.ProjectGraduation.offers.productoffers.entity.ProductOffer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

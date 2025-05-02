@@ -1,4 +1,4 @@
-package com.ProjectGraduation.offers.productoffer.entity;
+package com.ProjectGraduation.offers.productoffers.entity;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.order.entity.Order;

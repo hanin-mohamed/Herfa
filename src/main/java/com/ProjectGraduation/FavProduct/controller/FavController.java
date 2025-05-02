@@ -1,7 +1,7 @@
 package com.ProjectGraduation.FavProduct.controller;
 
 import com.ProjectGraduation.FavProduct.service.FavService;
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

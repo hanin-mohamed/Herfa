@@ -5,7 +5,7 @@ import com.ProjectGraduation.Events.exception.AlreadyInterestedException;
 import com.ProjectGraduation.Events.exception.EventNotFoundException;
 import com.ProjectGraduation.Events.exception.NotInterestedException;
 import com.ProjectGraduation.Events.service.EventService;
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.product.exception.FileUploadException;
 import com.ProjectGraduation.product.exception.UnauthorizedMerchantException;

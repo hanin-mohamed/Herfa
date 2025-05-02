@@ -1,8 +1,9 @@
 package com.ProjectGraduation.order.controller;
 
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.order.dto.OrderRequest;
+import com.ProjectGraduation.order.dto.OrderResponse;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.service.OrderService;
 import com.ProjectGraduation.order.utils.OrderStatus;
@@ -25,7 +26,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse> createOrder(@RequestHeader("Authorization") String token,
                                                    @RequestBody OrderRequest orderRequest) {
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        Order order = orderService.createOrder(username, orderRequest);
+        OrderResponse order = orderService.createOrder(username, orderRequest);
         return ResponseEntity.ok(new ApiResponse(true, "Order created successfully!", order));
     }
 

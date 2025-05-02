@@ -1,6 +1,6 @@
 package com.ProjectGraduation.rating.ProfileRating.controller;
 
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.rating.ProfileRating.dto.ProfileRatingDTO;

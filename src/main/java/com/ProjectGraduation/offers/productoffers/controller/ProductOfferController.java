@@ -1,11 +1,11 @@
-package com.ProjectGraduation.offers.productoffer.controller;
+package com.ProjectGraduation.offers.productoffers.controller;
 
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;
-import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
-import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
+import com.ProjectGraduation.offers.productoffers.entity.ProductOffer;
+import com.ProjectGraduation.offers.productoffers.service.ProductOfferService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.service.ProductService;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.ProjectGraduation.category.controller;
 
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.category.entity.Category;
 import com.ProjectGraduation.category.service.CategoryService;
 import lombok.RequiredArgsConstructor;

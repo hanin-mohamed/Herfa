@@ -7,7 +7,7 @@ import com.ProjectGraduation.profile.dto.ProfileWithProductsDTO;
 import com.ProjectGraduation.profile.dto.UpdateProfileRequestDTO;
 import com.ProjectGraduation.profile.entity.Profile;
 import com.ProjectGraduation.profile.service.ProfileService;
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

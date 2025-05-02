@@ -7,10 +7,13 @@ import com.ProjectGraduation.offers.autoOffers.entity.AutoOffer;
 import com.ProjectGraduation.offers.autoOffers.utils.AutoOfferType;
 import com.ProjectGraduation.offers.coupons.service.CouponService;
 import com.ProjectGraduation.offers.coupons.entity.Coupon;
-import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
-import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
+import com.ProjectGraduation.offers.dto.AppliedOfferDTO;
+import com.ProjectGraduation.offers.productoffers.service.ProductOfferService;
+import com.ProjectGraduation.offers.productoffers.entity.ProductOffer;
+import com.ProjectGraduation.order.dto.OrderItemDTO;
 import com.ProjectGraduation.order.dto.OrderRequest;
 import com.ProjectGraduation.order.dto.OrderItemRequest;
+import com.ProjectGraduation.order.dto.OrderResponse;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.entity.OrderDetails;
 import com.ProjectGraduation.order.helper.CouponUsageRecord;
@@ -18,6 +21,7 @@ import com.ProjectGraduation.order.helper.OfferApplication;
 import com.ProjectGraduation.order.helper.ProductOfferUsageRecord;
 import com.ProjectGraduation.order.repository.OrderRepository;
 import com.ProjectGraduation.order.utils.OrderStatus;
+import com.ProjectGraduation.product.dto.ProductDTO;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.service.ProductService;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
@@ -40,7 +44,7 @@ public class OrderService {
     private final AutoOfferService autoOfferService;
 
     @Transactional
-    public Order createOrder(String username, OrderRequest req) {
+    public OrderResponse createOrder(String username, OrderRequest req) {
         User user = userRepo.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -55,7 +59,6 @@ public class OrderService {
         order.setUser(user);
         order.setStatus(OrderStatus.PENDING);
         order.setOrderDetails(new ArrayList<>());
-
         order = orderRepo.save(order);
 
         double total = 0.0;
@@ -74,9 +77,11 @@ public class OrderService {
             OrderDetails orderDetails = new OrderDetails();
             orderDetails.setOrder(order);
             orderDetails.setProduct(product);
+            orderDetails.setCoupon(couponService.getCouponByCode(item.getCouponCode()).orElse(null));
             orderDetails.setQuantity(item.getQuantity());
 
             double price = applyAllOffers(product, item.getQuantity(), item.getCouponCode(), user, order, appliedOffers, couponUsages, productOfferUsages);
+            orderDetails.setUnitPrice(price / item.getQuantity());
             total += price;
             order.getOrderDetails().add(orderDetails);
         }
@@ -94,13 +99,51 @@ public class OrderService {
             productOfferService.recordOfferUsage(usage.offer, user, order, usage.discount);
         }
 
-        // Add loyalty points based on total (1 point for every 10 units spent)
         int pointsEarned = (int) (total / 10);
         user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsEarned);
         userRepo.save(user);
 
-        return order;
+        return mapToOrderResponse(order);
     }
+
+    private OrderResponse mapToOrderResponse(Order order) {
+        List<OrderItemDTO> items = order.getOrderDetails().stream().map(detail -> {
+            Product product = detail.getProduct();
+            return OrderItemDTO.builder()
+                    .id(detail.getId())
+                    .quantity(detail.getQuantity())
+                    .unitPrice(detail.getUnitPrice())
+                    .couponCode(detail.getCoupon() != null ? detail.getCoupon().getCode() : null)
+                    .product(ProductDTO.builder()
+                            .id(product.getId())
+                            .name(product.getName())
+                            .shortDescription(product.getShortDescription())
+                            .longDescription(product.getLongDescription())
+                            .price(product.getPrice())
+                            .quantity(product.getQuantity())
+                            .active(product.getActive())
+                            .build()
+                    )
+                    .build();
+        }).toList();
+
+        List<AppliedOfferDTO> offers = order.getAppliedOffers().stream()
+                .map(desc -> new AppliedOfferDTO())
+                .toList();
+
+        return OrderResponse.builder()
+                .id(order.getId())
+                .orderDate(order.getOrderDate())
+                .totalPrice(order.getTotalPrice())
+                .status(order.getStatus().name())
+                .orderDetails(items)
+                .appliedOffers(order.getAppliedOffers().stream()
+                        .map(AppliedOfferDTO::new)
+                        .toList())
+                .build();
+    }
+
+
 
     private double applyAllOffers(Product product, int quantity, String couponCode, User user, Order order,
                                   List<String> appliedOffers, List<CouponUsageRecord> couponUsages,

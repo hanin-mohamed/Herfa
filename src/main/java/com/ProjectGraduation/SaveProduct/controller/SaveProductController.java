@@ -1,7 +1,7 @@
 package com.ProjectGraduation.SaveProduct.controller;
 
 import com.ProjectGraduation.SaveProduct.service.SaveProductService;
-import com.ProjectGraduation.auth.api.model.ApiResponse;
+import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.product.entity.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
