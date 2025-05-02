@@ -1,6 +1,5 @@
 package com.ProjectGraduation.auth.entity;
 
-//import com.ProjectGraduation.Events.entity.Event;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.product.entity.Product;
@@ -16,6 +15,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 @Entity
 @Table(name = "user")
 @Getter
@@ -37,7 +37,6 @@ public class User {
     @JsonIgnore
     private String password;
 
-
     @Column(name = "email", nullable = false, unique = true, length = 320)
     private String email;
 
@@ -56,9 +55,7 @@ public class User {
 
     private String otp;
     private LocalDateTime otpExpiration;
-    @Setter
     private String resetOtp;
-    @Setter
     private LocalDateTime resetOtpExpiration;
 
     @OneToMany(mappedBy = "user")
@@ -87,7 +84,7 @@ public class User {
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
 
-    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Profile profile;
 
     @OneToMany(mappedBy = "rater")
@@ -98,6 +95,6 @@ public class User {
     @JsonIgnore
     private List<ProfileRating> ratingsReceived;
 
-
-
+    @Column(name = "loyalty_points")
+    private int loyaltyPoints = 0;
 }

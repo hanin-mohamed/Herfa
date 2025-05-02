@@ -5,10 +5,7 @@ import com.ProjectGraduation.offers.coupons.utils.DiscountType;
 import com.ProjectGraduation.offers.autoOffers.utils.UserSegment;
 import com.ProjectGraduation.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -19,6 +16,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "coupons")
 public class Coupon {
 

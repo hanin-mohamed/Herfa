@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,12 +18,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "offers")
+@Table(name = "product_offers")
 public class ProductOffer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -39,9 +42,13 @@ public class ProductOffer {
 
     private LocalDateTime endDate;
 
-    @OneToMany
-    @JoinColumn(name = "product_id")
-    private List<Product> products;
+    @ManyToMany
+    @JoinTable(
+            name = "product_offer_products",
+            joinColumns = @JoinColumn(name = "offer_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private List<Product> products = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "created_by")

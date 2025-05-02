@@ -18,5 +18,5 @@ public class CouponRequest {
     private Integer availableQuantity;
     private LocalDateTime expiryDate;
     private Boolean isActive;
-    private Product product;
+    private Long productId;
 }

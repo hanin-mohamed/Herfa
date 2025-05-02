@@ -1,5 +1,6 @@
 package com.ProjectGraduation.offers.productoffer.controller;
 
+import com.ProjectGraduation.auth.api.model.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;
@@ -24,14 +25,16 @@ public class ProductOfferController {
     private final JWTService jwtService;
     private final ProductService productService;
     private final UserService userService;
+
     @PostMapping("/products")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
-    public ResponseEntity<ProductOffer> createOfferForProducts(
+    public ResponseEntity<ApiResponse> createOfferForProducts(
             @RequestHeader("Authorization") String token,
             @RequestParam List<Long> productIds,
             @RequestParam double discountPercentage,
             @RequestParam LocalDateTime startDate,
             @RequestParam LocalDateTime endDate) {
+
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
         User merchant = userService.getUserByUsername(username);
 
@@ -39,30 +42,36 @@ public class ProductOfferController {
 
         for (Product product : products) {
             if (!product.getUser().getId().equals(merchant.getId())) {
-                throw new RuntimeException("product/products don't belong to the current merchant");
+                throw new RuntimeException("Product(s) don't belong to the current merchant");
             }
         }
 
-        ProductOffer productOffer = productOfferService.createOfferForProducts(merchant, products, discountPercentage, startDate, endDate);
+        ProductOffer offer = productOfferService.createOfferForProducts(merchant, products, discountPercentage, startDate, endDate);
+
         for (Product product : products) {
             double discounted = productOfferService.getDiscountedPrice(product);
             product.setDiscountedPrice(discounted);
+            productService.saveProduct(product);
         }
-        return ResponseEntity.ok(productOffer);
+
+        return ResponseEntity.ok(new ApiResponse(true, "Offer created successfully", offer));
     }
+
     @GetMapping
-    public ResponseEntity<List<ProductOffer>> getAllOffers() {
-        return ResponseEntity.ok(productOfferService.getAllOffers());
+    public ResponseEntity<ApiResponse> getAllOffers() {
+        List<ProductOffer> offers = productOfferService.getAllOffers();
+        return ResponseEntity.ok(new ApiResponse(true, "Offers fetched successfully", offers));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
-    public ResponseEntity<Void> deleteOffer(@PathVariable Long id, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<ApiResponse> deleteOffer(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token) {
+
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        User currentUser = userService.getUserByUsername(username);
-        productOfferService.deleteOffer(id, currentUser);
-        return ResponseEntity.noContent().build();
+        User merchant = userService.getUserByUsername(username);
+        productOfferService.deleteOffer(id, merchant);
+        return ResponseEntity.ok(new ApiResponse(true, "Offer deleted successfully", null));
     }
 }
-
-

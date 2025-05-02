@@ -13,9 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "orders")
@@ -34,14 +32,19 @@ public class Order {
     private LocalDateTime orderDate;
 
     private double totalPrice;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetails> orderDetails = new ArrayList<>();
-
     @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
 
+    @ElementCollection
+    @CollectionTable(name = "order_applied_offers", joinColumns = @JoinColumn(name = "order_id"))
+    @Column(name = "offer_description")
+    private List<String> appliedOffers;
 }

@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -47,32 +49,29 @@ public class Product {
     @JsonIgnore
     private User user;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private Set<OrderDetails> orderDetails;
+    private Set<OrderDetails> orderDetails = new HashSet<>();
 
     @ManyToMany(mappedBy = "savedProducts")
     @JsonIgnore
-    private Set<User> savedByUsers;
+    private Set<User> savedByUsers = new HashSet<>();
 
     @ManyToMany(mappedBy = "favProducts")
     @JsonIgnore
-    private Set<User> favByUsers;
+    private Set<User> favByUsers = new HashSet<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Comment> comments;
+    private List<Comment> comments = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "color")
-    private List<String> colors;
+    private List<String> colors = new ArrayList<>();
 
     @Transient
     private double discountedPrice;
 
-    @ManyToOne
-    @JoinColumn(name = "offer_id")
-    private ProductOffer productOffer;
 
 }

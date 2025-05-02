@@ -144,15 +144,5 @@ public class ProductService {
                         (max == null || p.getPrice() <= max))
                 .toList();
     }
-    public Map<Long, Product> getProductsMapByIds(List<Long> ids) {
-        return productRepository.findAllById(ids)
-                .stream()
-                .collect(Collectors.toMap(Product::getId, p -> {
-                    double discountedPrice = productOfferService.getDiscountedPrice(p);
-                    p.setDiscountedPrice(discountedPrice);
-                    return p;
-                }));
-    }
-
 
 }

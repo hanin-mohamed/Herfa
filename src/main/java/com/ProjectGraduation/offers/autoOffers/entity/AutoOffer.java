@@ -1,19 +1,21 @@
 package com.ProjectGraduation.offers.autoOffers.entity;
 
-
 import com.ProjectGraduation.offers.autoOffers.utils.AutoOfferType;
+import com.ProjectGraduation.product.entity.Product;
+import com.ProjectGraduation.category.entity.Category;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "auto_offers")
-@Setter
+@Table(name = "auto_offer")
 @Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AutoOffer {
@@ -21,23 +23,34 @@ public class AutoOffer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
-    private Double discount;
-    private Double maxDiscount;
-    private boolean firstOrderOnly;
-    private boolean active;
-    private Double fixedPrice;
 
     @Enumerated(EnumType.STRING)
     private AutoOfferType type;
 
+    private Double discount;
+    private Double maxDiscount;
+    private Double fixedPrice;
+    private Boolean firstOrderOnly;
     private Integer buyQuantity;
     private Integer getQuantity;
-
     private Integer requiredPoints;
     private Double equivalentValue;
-
     private Double minOrderAmount;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private Date startDate;
+    private Date endDate;
+    private boolean active;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+    @ManyToMany
+    @JoinTable(
+            name = "auto_offer_categories",
+            joinColumns = @JoinColumn(name = "offer_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Category> categories = new HashSet<>();
 }
