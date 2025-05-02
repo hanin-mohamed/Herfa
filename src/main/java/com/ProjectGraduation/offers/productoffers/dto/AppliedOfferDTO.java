@@ -1,4 +1,4 @@
-package com.ProjectGraduation.offers.dto;
+package com.ProjectGraduation.offers.productoffers.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

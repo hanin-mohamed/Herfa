@@ -72,5 +72,8 @@ public class Product {
     @Transient
     private double discountedPrice;
 
+    public Boolean isActive() {
+        return active;
+    }
 
 }

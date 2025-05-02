@@ -7,7 +7,7 @@ import com.ProjectGraduation.offers.autoOffers.entity.AutoOffer;
 import com.ProjectGraduation.offers.autoOffers.utils.AutoOfferType;
 import com.ProjectGraduation.offers.coupons.service.CouponService;
 import com.ProjectGraduation.offers.coupons.entity.Coupon;
-import com.ProjectGraduation.offers.dto.AppliedOfferDTO;
+import com.ProjectGraduation.offers.productoffers.dto.AppliedOfferDTO;
 import com.ProjectGraduation.offers.productoffers.service.ProductOfferService;
 import com.ProjectGraduation.offers.productoffers.entity.ProductOffer;
 import com.ProjectGraduation.order.dto.OrderItemDTO;
@@ -113,7 +113,7 @@ public class OrderService {
                     .id(detail.getId())
                     .quantity(detail.getQuantity())
                     .unitPrice(detail.getUnitPrice())
-                    .couponCode(detail.getCoupon() != null ? detail.getCoupon().getCode() : null)
+                    .couponCode(detail.getCoupon().getCode())
                     .product(ProductDTO.builder()
                             .id(product.getId())
                             .name(product.getName())
@@ -126,10 +126,6 @@ public class OrderService {
                     )
                     .build();
         }).toList();
-
-        List<AppliedOfferDTO> offers = order.getAppliedOffers().stream()
-                .map(desc -> new AppliedOfferDTO())
-                .toList();
 
         return OrderResponse.builder()
                 .id(order.getId())
