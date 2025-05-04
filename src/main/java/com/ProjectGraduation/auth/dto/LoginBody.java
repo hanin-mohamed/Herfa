@@ -1,4 +1,4 @@
-package com.ProjectGraduation.auth.api.model;
+package com.ProjectGraduation.auth.dto;
 
 import lombok.Getter;
 

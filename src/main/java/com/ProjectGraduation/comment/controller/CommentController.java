@@ -2,7 +2,7 @@ package com.ProjectGraduation.comment.controller;
 
 import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.service.CommentService;
@@ -20,7 +20,7 @@ public class CommentController {
 
     private final CommentService commentService;
     private final JWTService jwtService;
-    private final UserRepo repo;
+    private final UserRepository repo;
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_USER')")

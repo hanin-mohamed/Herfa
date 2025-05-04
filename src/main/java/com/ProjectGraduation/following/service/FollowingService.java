@@ -2,7 +2,7 @@ package com.ProjectGraduation.following.service;
 
 import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.following.entity.Following;
 import com.ProjectGraduation.following.repository.FollowingRepository;
@@ -17,13 +17,13 @@ public class FollowingService {
 
     private final FollowingRepository followingRepository;
 
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
 
     public void followMerchant(Long followerId, Long merchantId) {
-        User follower = userRepo.findById(followerId)
+        User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new UserNotFoundException(" User not found"));
 
-        User merchant = userRepo.findById(merchantId)
+        User merchant = userRepository.findById(merchantId)
                 .orElseThrow(() -> new UserNotFoundException("Merchant not found"));
 
         if (merchant.getRole() != Role.MERCHANT) {
@@ -43,10 +43,10 @@ public class FollowingService {
     }
 
     public void unfollowMerchant(Long followerId, Long merchantId) {
-        User follower = userRepo.findById(followerId)
+        User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new UserNotFoundException("Follower user not found"));
 
-        User merchant = userRepo.findById(merchantId)
+        User merchant = userRepository.findById(merchantId)
                 .orElseThrow(() -> new UserNotFoundException("Merchant not found"));
 
         Following followMerchant = followingRepository.findByFollowerAndFollowing(follower, merchant)
@@ -64,12 +64,12 @@ public class FollowingService {
     }
 
     public long getFollowerCount(Long merchantId) {
-        User merchant = userRepo.findById(merchantId)
+        User merchant = userRepository.findById(merchantId)
                 .orElseThrow(() -> new UserNotFoundException("Merchant not found"));
         return followingRepository.findAllByFollowing(merchant).size();
     }
     public long getFollowingCount(Long followerId) {
-        User follower = userRepo.findById(followerId)
+        User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return followingRepository.findAllByFollower(follower).size();
     }

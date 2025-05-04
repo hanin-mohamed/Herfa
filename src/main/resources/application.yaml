@@ -32,7 +32,6 @@ spring:
     port: 587
     username: mf7373057@gmail.com  # Your full email address
     password: cfhhrlxyhiikbucn
-    # The 16-character app password you generated
     properties:
       mail:
         smtp:

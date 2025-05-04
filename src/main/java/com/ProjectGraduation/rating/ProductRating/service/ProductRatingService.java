@@ -1,7 +1,7 @@
 package com.ProjectGraduation.rating.ProductRating.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.repo.ProductRepository;
 import com.ProjectGraduation.rating.ProductRating.entity.ProductRating;
@@ -16,11 +16,11 @@ import java.util.List;
 public class ProductRatingService {
 
     private final ProductRatingRepo repo ;
-    private final UserRepo userRepo ;
+    private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
     public ProductRating addOrUpdateRating (Long userId , Long productId , int stars){
-        User user = userRepo.findById(userId).orElseThrow(
+        User user = userRepository.findById(userId).orElseThrow(
                 ()->new RuntimeException("User Not Found")) ;
         Product product = productRepository.findById(productId).orElseThrow(
                 ()->new RuntimeException("Product Not Found"));

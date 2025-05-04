@@ -1,6 +1,8 @@
-package com.ProjectGraduation.auth.api.controllerAuth;
+package com.ProjectGraduation.auth.controller;
 
-import com.ProjectGraduation.auth.api.model.*;
+import com.ProjectGraduation.auth.dto.LoginBody;
+import com.ProjectGraduation.auth.dto.RegistrationBody;
+import com.ProjectGraduation.auth.dto.ResetPasswordRequest;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;

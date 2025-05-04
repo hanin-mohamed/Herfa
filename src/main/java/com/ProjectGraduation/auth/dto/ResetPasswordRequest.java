@@ -1,4 +1,4 @@
-package com.ProjectGraduation.auth.api.model;
+package com.ProjectGraduation.auth.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

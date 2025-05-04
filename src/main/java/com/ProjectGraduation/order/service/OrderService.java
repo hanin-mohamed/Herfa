@@ -1,7 +1,10 @@
 package com.ProjectGraduation.order.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
+import com.ProjectGraduation.bundle.entity.Bundle;
+import com.ProjectGraduation.bundle.entity.BundleProduct;
+import com.ProjectGraduation.bundle.service.BundleService;
 import com.ProjectGraduation.offers.autoOffers.service.AutoOfferService;
 import com.ProjectGraduation.offers.autoOffers.entity.AutoOffer;
 import com.ProjectGraduation.offers.autoOffers.utils.AutoOfferType;
@@ -30,7 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.lang.Math.max;
 
 @Service
 @RequiredArgsConstructor
@@ -38,22 +42,16 @@ public class OrderService {
 
     private final OrderRepository orderRepo;
     private final ProductService productService;
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
     private final ProductOfferService productOfferService;
     private final CouponService couponService;
     private final AutoOfferService autoOfferService;
+    private final BundleService bundleService;
 
     @Transactional
     public OrderResponse createOrder(String username, OrderRequest req) {
-        User user = userRepo.findByUsernameIgnoreCase(username)
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        List<Long> ids = req.getItems().stream()
-                .map(OrderItemRequest::getProductId)
-                .collect(Collectors.toList());
-
-        Map<Long, Product> map = productService.getProductsByIds(ids)
-                .stream().collect(Collectors.toMap(Product::getId, p -> p));
 
         Order order = new Order();
         order.setUser(user);
@@ -67,23 +65,48 @@ public class OrderService {
         List<ProductOfferUsageRecord> productOfferUsages = new ArrayList<>();
 
         for (OrderItemRequest item : req.getItems()) {
-            Product product = map.get(item.getProductId());
-            if (product == null || product.getQuantity() < item.getQuantity())
-                throw new IllegalStateException("Invalid product or stock");
+            if (item.getBundleId() != null) {
+                Bundle bundle = bundleService.getById(item.getBundleId());
+                if (!bundle.isActive()) throw new IllegalStateException("Inactive bundle");
 
-            product.setQuantity(product.getQuantity() - item.getQuantity());
-            productService.saveProduct(product);
+                for (BundleProduct bp : bundle.getProducts()) {
+                    Product product = bp.getProduct();
+                    int requiredQty = bp.getQuantity() * item.getQuantity();
+                    if (product.getQuantity() < requiredQty) {
+                        throw new IllegalStateException("Insufficient stock for bundle product: " + product.getName());
+                    }
+                    product.setQuantity(product.getQuantity() - requiredQty);
+                    productService.saveProduct(product);
 
-            OrderDetails orderDetails = new OrderDetails();
-            orderDetails.setOrder(order);
-            orderDetails.setProduct(product);
-            orderDetails.setCoupon(couponService.getCouponByCode(item.getCouponCode()).orElse(null));
-            orderDetails.setQuantity(item.getQuantity());
+                    OrderDetails details = new OrderDetails();
+                    details.setOrder(order);
+                    details.setProduct(product);
+                    details.setQuantity(requiredQty);
+                    details.setUnitPrice(0);
+                    order.getOrderDetails().add(details);
+                }
 
-            double price = applyAllOffers(product, item.getQuantity(), item.getCouponCode(), user, order, appliedOffers, couponUsages, productOfferUsages);
-            orderDetails.setUnitPrice(price / item.getQuantity());
-            total += price;
-            order.getOrderDetails().add(orderDetails);
+                total += bundle.getBundlePrice() * item.getQuantity();
+                appliedOffers.add("Bundle: " + bundle.getName());
+            } else {
+                Product product = productService.getById(item.getProductId());
+                if (product == null || product.getQuantity() < item.getQuantity())
+                    throw new IllegalStateException("Invalid product or stock");
+
+                product.setQuantity(product.getQuantity() - item.getQuantity());
+                productService.saveProduct(product);
+
+                OrderDetails orderDetails = new OrderDetails();
+                orderDetails.setOrder(order);
+                orderDetails.setProduct(product);
+                orderDetails.setQuantity(item.getQuantity());
+
+                double price = applyAllOffers(product, item.getQuantity(), item.getCouponCode(), user, order, appliedOffers, couponUsages, productOfferUsages);
+                orderDetails.setUnitPrice(price / item.getQuantity());
+
+                total += price;
+                order.getOrderDetails().add(orderDetails);
+            }
         }
 
         order.setTotalPrice(Math.max(total, 0));
@@ -101,10 +124,11 @@ public class OrderService {
 
         int pointsEarned = (int) (total / 10);
         user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsEarned);
-        userRepo.save(user);
+        userRepository.save(user);
 
         return mapToOrderResponse(order);
     }
+
 
     private OrderResponse mapToOrderResponse(Order order) {
         List<OrderItemDTO> items = order.getOrderDetails().stream().map(detail -> {
@@ -154,11 +178,11 @@ public class OrderService {
 
         // Step 2: Apply Coupon
         double couponDiscount = applyCoupon(product, quantity, couponCode, user, order, couponUsages, appliedOffers);
-        subtotal = Math.max(subtotal - couponDiscount, 0);
+        subtotal = max(subtotal - couponDiscount, 0);
 
         // Step 3: Apply Best Auto Offer
         double autoDiscount = applyBestAutoOffer(product, quantity, subtotal, user, order, categoryId, appliedOffers);
-        subtotal = Math.max(subtotal - autoDiscount, 0);
+        subtotal = max(subtotal - autoDiscount, 0);
 
         return subtotal;
     }
@@ -223,7 +247,7 @@ public class OrderService {
                     autoOfferService.recordOfferUsage(autoOffer, user, order, offer.getDiscount());
                     if (autoOffer.getType() == AutoOfferType.LOYALTY_POINTS && autoOffer.getRequiredPoints() != null) {
                         user.setLoyaltyPoints(user.getLoyaltyPoints() - autoOffer.getRequiredPoints());
-                        userRepo.save(user);
+                        userRepository.save(user);
                     }
                     return offer.getDiscount();
                 })

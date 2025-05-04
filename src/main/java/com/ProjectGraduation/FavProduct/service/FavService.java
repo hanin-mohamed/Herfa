@@ -1,7 +1,7 @@
 package com.ProjectGraduation.FavProduct.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.repo.ProductRepository;
@@ -18,7 +18,7 @@ public class FavService {
 
     private final JWTService jwtService ;
 
-    private final UserRepo userRepo ;
+    private final UserRepository userRepository;
 
     private final ProductRepository repo ;
 
@@ -34,7 +34,7 @@ public class FavService {
             throw new IllegalArgumentException("Product Is Already Fav By This User");
         }
         user.getFavProducts().add(product);
-        userRepo.save(user) ;
+        userRepository.save(user) ;
 
 
     }
@@ -50,16 +50,16 @@ public class FavService {
             throw new IllegalArgumentException("Product is not fav by the user.");
         }
         user.getFavProducts().remove(product) ;
-        userRepo.save(user);
+        userRepository.save(user);
 
     }
 
     public User getUserByUserName(String username){
-        return userRepo.findByUsernameIgnoreCase(username)
+        return userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(()->new RuntimeException("User Not Found")) ;
     }
 
     public List<User> getUsersByFavProduct(Long productId) {
-        return userRepo.findUsersByFavProduct(productId);
+        return userRepository.findUsersByFavProduct(productId);
     }
 }

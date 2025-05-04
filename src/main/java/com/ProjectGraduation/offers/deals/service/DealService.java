@@ -2,8 +2,7 @@ package com.ProjectGraduation.offers.deals.service;
 
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
-import com.ProjectGraduation.auth.service.JWTService;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.offers.deals.dto.DealRequest;
 import com.ProjectGraduation.offers.deals.entity.Deal;
@@ -22,13 +21,13 @@ import java.util.List;
 public class DealService {
 
 
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
     private final ProductService productService;
     private final DealRepository dealRepository;
     private final UserService userService;
     @Transactional
     public Deal createDeal(DealRequest request, String username) {
-        User buyer = userRepo.findByUsernameIgnoreCase(username)
+        User buyer = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Product product = productService.getById(request.getProductId());

@@ -1,4 +1,4 @@
-package com.ProjectGraduation.auth.entity.repo;
+package com.ProjectGraduation.auth.repository;
 
 //import com.ProjectGraduation.auth.entity.Merchant;
 import com.ProjectGraduation.auth.entity.User;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepo extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsernameIgnoreCase(String username);
 

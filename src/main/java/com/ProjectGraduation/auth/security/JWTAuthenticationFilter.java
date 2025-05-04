@@ -1,4 +1,4 @@
-package com.ProjectGraduation.auth.api.security;
+package com.ProjectGraduation.auth.security;
 
 import com.ProjectGraduation.auth.service.JWTService;
 import com.auth0.jwt.exceptions.JWTVerificationException;

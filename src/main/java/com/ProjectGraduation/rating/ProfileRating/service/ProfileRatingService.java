@@ -1,7 +1,7 @@
 package com.ProjectGraduation.rating.ProfileRating.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.rating.ProfileRating.dto.ProfileRatingDTO;
 import com.ProjectGraduation.rating.ProfileRating.entity.ProfileRating;
@@ -17,7 +17,7 @@ import java.util.List;
 public class ProfileRatingService {
 
     private final ProfileRatingRepository profileRatingRepo;
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
 
     @Transactional
     public void rateUser(Long raterId, Long ratedUserId, int stars, String comment) {
@@ -25,10 +25,10 @@ public class ProfileRatingService {
             throw new IllegalArgumentException("Stars must be between 1 and 5");
         }
 
-        User rater = userRepo.findById(raterId)
+        User rater = userRepository.findById(raterId)
                 .orElseThrow(() -> new UserNotFoundException("Rater user not found"));
 
-        User ratedUser = userRepo.findById(ratedUserId)
+        User ratedUser = userRepository.findById(ratedUserId)
                 .orElseThrow(() -> new UserNotFoundException("Rated user not found"));
 
         if (rater.getId().equals(ratedUser.getId())) {
@@ -52,7 +52,7 @@ public class ProfileRatingService {
 
     @Transactional
     public double getAverageRating(Long ratedUserId) {
-        User ratedUser = userRepo.findById(ratedUserId)
+        User ratedUser = userRepository.findById(ratedUserId)
                 .orElseThrow(() -> new UserNotFoundException("Rated user not found"));
 
         List<ProfileRating> ratings = profileRatingRepo.findByRatedUserOrderByCreatedAtDesc(ratedUser);
@@ -69,14 +69,14 @@ public class ProfileRatingService {
 
     @Transactional
     public List<ProfileRating> getRatingsForUser(Long ratedUserId) {
-        User ratedUser = userRepo.findById(ratedUserId)
+        User ratedUser = userRepository.findById(ratedUserId)
                 .orElseThrow(() -> new UserNotFoundException("Rated user not found"));
 
         return profileRatingRepo.findByRatedUserOrderByCreatedAtDesc(ratedUser);
     }
     @Transactional
     public List<ProfileRatingDTO> getAllRatings(Long ratedUserId) {
-        User ratedUser = userRepo.findById(ratedUserId)
+        User ratedUser = userRepository.findById(ratedUserId)
                 .orElseThrow(() -> new UserNotFoundException("Rated user not found"));
 
         return profileRatingRepo.findByRatedUserOrderByCreatedAtDesc(ratedUser)

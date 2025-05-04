@@ -1,14 +1,12 @@
 package com.ProjectGraduation.auth.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.exception.OtpStillValidException;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -23,7 +21,7 @@ public class AuthService {
     private static final int OTP_EXPIRATION_MINUTES = 10;
     private static final int OTP_LENGTH = 6;
 
-    private final UserRepo repo;
+    private final UserRepository repo;
 
     private final JavaMailSender mailSender;
 

@@ -2,7 +2,7 @@ package com.ProjectGraduation.rating.ProductRating.controller;
 
 import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.rating.ProductRating.entity.ProductRating;
 import com.ProjectGraduation.rating.ProductRating.service.ProductRatingService;
@@ -18,7 +18,7 @@ public class ProductRatingController {
 
     private final ProductRatingService service;
     private final JWTService jwtService;
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_USER')")
@@ -28,7 +28,7 @@ public class ProductRatingController {
             @RequestParam int stars
     ) {
         String userName = jwtService.getUsername(token.replace("Bearer ", ""));
-        User user = userRepo.findByUsernameIgnoreCase(userName)
+        User user = userRepository.findByUsernameIgnoreCase(userName)
                 .orElseThrow(() -> new RuntimeException("User Not Found"));
 
         Long userId = user.getId();

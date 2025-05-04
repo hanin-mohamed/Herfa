@@ -1,5 +1,6 @@
-package com.ProjectGraduation.auth.api.security;
+package com.ProjectGraduation.auth.security.config;
 
+import com.ProjectGraduation.auth.security.JWTAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

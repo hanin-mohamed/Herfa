@@ -1,5 +1,6 @@
 package com.ProjectGraduation.order.entity;
 
+import com.ProjectGraduation.bundle.entity.Bundle;
 import com.ProjectGraduation.offers.coupons.entity.Coupon;
 import com.ProjectGraduation.product.entity.Product;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,5 +38,8 @@ public class OrderDetails {
     private int quantity;
 
     private double unitPrice;
+    @ManyToOne
+    @JoinColumn(name = "bundle_id")
+    private Bundle bundle;
 
 }

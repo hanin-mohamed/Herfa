@@ -1,7 +1,7 @@
 package com.ProjectGraduation.SaveProduct.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.repo.ProductRepository;
@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
 public class SaveProductService {
 
     @Autowired
-    private UserRepo userRepo;
+    private UserRepository userRepository;
 
     @Autowired
     private ProductRepository productRepository;
@@ -38,7 +38,7 @@ public class SaveProductService {
 
 
         user.getSavedProducts().add(product);
-        userRepo.save(user) ;
+        userRepository.save(user) ;
 
     }
 
@@ -57,7 +57,7 @@ public class SaveProductService {
 
         user.getSavedProducts().remove(product);
 
-        userRepo.save(user);
+        userRepository.save(user);
     }
     @Transactional
     public List<Product> getAllSavedProducts(String token){
@@ -70,7 +70,7 @@ public class SaveProductService {
     }
 
     public User getUserByUsername(String username) {
-        return userRepo.findByUsernameIgnoreCase(username)
+        return userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new RuntimeException("User Not Found"));
     }
 }

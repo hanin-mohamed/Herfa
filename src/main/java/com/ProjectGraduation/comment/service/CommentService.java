@@ -1,7 +1,7 @@
 package com.ProjectGraduation.comment.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.repo.CommentRepo;
 import com.ProjectGraduation.product.entity.Product;
@@ -20,10 +20,10 @@ public class CommentService {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private UserRepo userRepo ;
+    private UserRepository userRepository;
 
     public Comment addComment(Long userId , Long productId , String content){
-        Optional<User>userOptional = userRepo.findById(userId) ;
+        Optional<User>userOptional = userRepository.findById(userId) ;
         Optional<Product>productOptional = productRepository.findById(productId);
         if (userOptional.isEmpty()||productOptional.isEmpty()){
             throw new RuntimeException("User Or Product not found ") ;

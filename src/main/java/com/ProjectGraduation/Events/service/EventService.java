@@ -4,14 +4,13 @@ import com.ProjectGraduation.Events.entity.Event;
 import com.ProjectGraduation.Events.exception.*;
 import com.ProjectGraduation.Events.repo.EventRepo;
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.product.exception.FileUploadException;
 import com.ProjectGraduation.product.exception.UnauthorizedMerchantException;
 import com.ProjectGraduation.product.service.FileService;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +25,7 @@ import java.util.List;
 public class EventService {
 
     private final EventRepo eventRepository;
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
     private final JWTService jwtService;
     private final FileService fileService;
 
@@ -38,7 +37,7 @@ public class EventService {
     @Transactional
     public Event createEvent(String token, String name, String description, MultipartFile media, LocalDateTime startTime, LocalDateTime endTime, Double price) {
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        User user = userRepo.findByUsernameIgnoreCase(username)
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("Merchant not found with username: " + username));
 
         if (!user.getRole().toString().equals("MERCHANT")) {
@@ -67,7 +66,7 @@ public class EventService {
     @Transactional
     public void expressInterest(Long eventId, String token) {
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        User user = userRepo.findByUsernameIgnoreCase(username)
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
         Event event = eventRepository.findById(eventId)
@@ -84,7 +83,7 @@ public class EventService {
     @Transactional
     public void removeInterest(Long eventId, String token) {
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        User user = userRepo.findByUsernameIgnoreCase(username)
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
 
         Event event = eventRepository.findById(eventId)

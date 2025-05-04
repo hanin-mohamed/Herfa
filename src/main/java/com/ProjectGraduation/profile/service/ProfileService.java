@@ -1,7 +1,7 @@
 package com.ProjectGraduation.profile.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.entity.repo.UserRepo;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.service.FileService;
@@ -25,7 +25,7 @@ import java.util.List;
 public class ProfileService {
 
     private final ProfileRepository profileRepo;
-    private final UserRepo userRepo;
+    private final UserRepository userRepository;
     private final ProductService productService;
     private final ProfileRatingService profileRatingService;
     private final  FileService fileService;
@@ -91,7 +91,7 @@ public class ProfileService {
 
 
     public Profile getProfileByUserId(Long userId) {
-        User user = userRepo.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         return profileRepo.findByUser(user)
@@ -102,7 +102,7 @@ public class ProfileService {
 
     @Transactional
     public ProfileWithProductsDTO getProfileWithProducts(Long userId) {
-        User user = userRepo.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Profile profile = profileRepo.findByUser(user)
