@@ -27,7 +27,8 @@ public class WebSecurityConfig {
                                 "/auth/me/**", "/auth/verify/**","/auth/forgotPassword/**",
                                 "/auth/reset/**","/auth/resend/**",  "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/webhook"
                         ).permitAll() // Public endpoints
                         .anyRequest().authenticated() // All other requests require authentication
                 )
