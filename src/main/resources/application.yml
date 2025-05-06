@@ -2,30 +2,30 @@
 
 stripe:
   secret:
-    key: ***REMOVED***
+#    key: ***REMOVED***
 
   webhook:
-    secret: whsec_296aaf1f43d3c2d5c388fa1241c581869aca15478ee2f1dfd2b858c6aad505ab
+#    secret: whsec_296aaf1f43d3c2d5c388fa1241c581869aca15478ee2f1dfd2b858c6aad505ab
 
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/herfa_db
-    username: root
-    password: hanona
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-
+#spring:
 #  datasource:
-#    url: jdbc:mysql://trolley.proxy.rlwy.net:53734/railway?useSSL=false&allowPublicKeyRetrieval=true
+#    url: jdbc:mysql://localhost:3306/herfa_db
 #    username: root
-#    password: YLWYGTCfWdSDOnLnbshXkgvKOQTNPUOA
+#    password: hanona
 #    driver-class-name: com.mysql.cj.jdbc.Driver
 #    hikari:
 #      maximum-pool-size: 10
-#      connection-timeout: 30000
-#      idle-timeout: 600000
-#      max-lifetime: 1800000
+
+  datasource:
+    url: jdbc:mysql://trolley.proxy.rlwy.net:53734/railway?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: YLWYGTCfWdSDOnLnbshXkgvKOQTNPUOA
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
