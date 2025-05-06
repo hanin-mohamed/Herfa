@@ -1,11 +1,5 @@
 
 
-#stripe:
-#  secret:
-#    key: ***REMOVED***
-
-#  webhook:
-#    secret: whsec_296aaf1f43d3c2d5c388fa1241c581869aca15478ee2f1dfd2b858c6aad505ab
 
 #spring:
 #  datasource:
