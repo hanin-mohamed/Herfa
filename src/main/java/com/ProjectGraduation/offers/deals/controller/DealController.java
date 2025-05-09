@@ -1,4 +1,4 @@
-package com.ProjectGraduation.offers.deals;
+package com.ProjectGraduation.offers.deals.controller;
 
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.common.ApiResponse;

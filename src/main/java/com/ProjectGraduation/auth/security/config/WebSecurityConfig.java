@@ -30,10 +30,11 @@ public class WebSecurityConfig {
                                 "/swagger-ui.html",
                                 "/webhook"
                         ).permitAll() // Public endpoints
-                        .anyRequest().authenticated() // All other requests require authentication
+                        .requestMatchers("profiles/**").authenticated()
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 
         return http.build();
