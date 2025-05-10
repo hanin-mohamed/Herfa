@@ -17,11 +17,11 @@ public class FileService {
         if (file == null || file.isEmpty()) {
             throw new FileUploadException("File cannot be null or empty.");
         }
+
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.isEmpty()) {
             throw new FileUploadException("Invalid file name.");
         }
-
 
         String extension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
         if (!extension.equals(".jpg") && !extension.equals(".png") && !extension.equals(".mp4")) {
@@ -37,7 +37,18 @@ public class FileService {
             fullPath = basePath + File.separator + "profile_pictures" + File.separator + "user_" + userId + File.separator + mediaFolder;
         } else {
             String merchantFolder = "merchant_" + userId;
-            String typeFolder = type.equalsIgnoreCase("product") ? "product" : "event";
+            String typeFolder;
+            switch (type.toLowerCase()) {
+                case "product":
+                    typeFolder = "product";
+                    break;
+                case "auction":
+                    typeFolder = "auction";
+                    break;
+                default:
+                    typeFolder = "event";
+                    break;
+            }
             fullPath = basePath + File.separator + merchantFolder + File.separator + typeFolder + File.separator + mediaFolder;
         }
 
@@ -51,10 +62,6 @@ public class FileService {
 
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String safeFileName = sanitizedName + timestamp + extension;
-//
-//        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-//        String safeFileName = name + timestamp + extension;
-
         String filePath = fullPath + File.separator + safeFileName;
 
         Files.copy(file.getInputStream(), Paths.get(filePath));
@@ -63,11 +70,17 @@ public class FileService {
         if (type.equalsIgnoreCase("profile")) {
             relativePath = "profile_pictures/user_" + userId + "/" + mediaFolder + "/" + safeFileName;
         } else {
-            relativePath = "merchant_" + userId + "/" + (type.equalsIgnoreCase("product") ? "product" : "event") + "/" + mediaFolder + "/" + safeFileName;
+            String typeFolder = switch (type.toLowerCase()) {
+                case "product" -> "product";
+                case "auction" -> "auction";
+                default -> "event";
+            };
+            relativePath = "merchant_" + userId + "/" + typeFolder + "/" + mediaFolder + "/" + safeFileName;
         }
 
         return relativePath.replace("\\", "/");
     }
+
 
 
     public InputStream getResourceFile(String path, String fileName) throws FileNotFoundException {

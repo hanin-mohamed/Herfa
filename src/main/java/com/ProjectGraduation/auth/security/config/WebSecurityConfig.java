@@ -29,9 +29,10 @@ public class WebSecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/webhook"
-                        ).permitAll() // Public endpoints
+                        ).permitAll() // Public endpoin
                         .requestMatchers("/profiles/**").authenticated()
                         .requestMatchers("/payment/**").authenticated()
+                        .requestMatchers("/auctions/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
