@@ -1,6 +1,6 @@
-package com.ProjectGraduation.FavProduct.controller;
+package com.ProjectGraduation.favProduct.controller;
 
-import com.ProjectGraduation.FavProduct.service.FavService;
+import com.ProjectGraduation.favProduct.service.FavService;
 import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
 import lombok.RequiredArgsConstructor;

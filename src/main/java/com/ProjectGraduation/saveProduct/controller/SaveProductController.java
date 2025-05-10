@@ -1,6 +1,6 @@
-package com.ProjectGraduation.SaveProduct.controller;
+package com.ProjectGraduation.saveProduct.controller;
 
-import com.ProjectGraduation.SaveProduct.service.SaveProductService;
+import com.ProjectGraduation.saveProduct.service.SaveProductService;
 import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.product.entity.Product;
 import lombok.RequiredArgsConstructor;

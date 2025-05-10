@@ -97,4 +97,11 @@ public class User {
 
     @Column(name = "loyalty_points")
     private int loyaltyPoints = 0;
+
+    @Column(name = "wallet_balance")
+    private double walletBalance = 0.0;
+
+    @Column(name = "reserved_balance")
+    private double reservedBalance = 0.0;
+
 }

@@ -1,8 +1,8 @@
-package com.ProjectGraduation.Events.service;
+package com.ProjectGraduation.events.service;
 
-import com.ProjectGraduation.Events.entity.Event;
-import com.ProjectGraduation.Events.exception.*;
-import com.ProjectGraduation.Events.repo.EventRepo;
+import com.ProjectGraduation.events.entity.Event;
+import com.ProjectGraduation.events.exception.*;
+import com.ProjectGraduation.events.repo.EventRepo;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;

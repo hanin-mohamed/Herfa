@@ -1,5 +1,7 @@
 package com.ProjectGraduation.payment.controller;
 
+import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.repository.OrderRepository;
 import com.ProjectGraduation.order.utils.OrderStatus;
@@ -18,18 +20,17 @@ import org.springframework.web.bind.annotation.*;
 public class WebhookController {
 
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
 
     private final String endpointSecret = Dotenv.load().get("STRIPE_WEBHOOK_SECRET");
+
     @PostMapping
     public ResponseEntity<String> handleStripeEvent(@RequestBody String payload,
                                                     @RequestHeader("Stripe-Signature") String sigHeader) {
-
         Event event;
         try {
             event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
-//            System.out.println("Signature verified - Event type: " + event.getType());
         } catch (Exception e) {
-//            System.out.println("Signature verification failed: " + e.getMessage());
             return ResponseEntity.badRequest().body("Invalid signature: " + e.getMessage());
         }
 
@@ -43,18 +44,36 @@ public class WebhookController {
 
                 JsonObject metadata = sessionJson.getAsJsonObject("metadata");
 
-                if (metadata == null || !metadata.has("orderId")) {
-                    return ResponseEntity.badRequest().body("Order ID missing in metadata");
+                // recharge wallet
+                if (metadata != null && metadata.has("recharge") && metadata.get("recharge").getAsString().equals("true")) {
+                    String userId = metadata.get("userId").getAsString();
+                    double amount = Double.parseDouble(metadata.get("amount").getAsString());
+
+                    User user = userRepository.findById(Long.parseLong(userId))
+                            .orElseThrow(() -> new RuntimeException("User not found"));
+
+                    user.setWalletBalance(user.getWalletBalance() + amount);
+                    userRepository.save(user);
+
+                    System.out.println("Wallet recharged for user " + userId + " with amount $" + amount);
+                    return ResponseEntity.ok("Wallet recharge completed");
                 }
 
-                String orderId = metadata.get("orderId").getAsString();
+                // pay for order
+                if (metadata != null && metadata.has("orderId")) {
+                    String orderId = metadata.get("orderId").getAsString();
 
-                Order order = orderRepository.findById(Long.parseLong(orderId))
-                        .orElseThrow(() -> new RuntimeException("Order not found"));
+                    Order order = orderRepository.findById(Long.parseLong(orderId))
+                            .orElseThrow(() -> new RuntimeException("Order not found"));
 
-                order.setStatus(OrderStatus.PAID);
-                orderRepository.save(order);
-//                System.out.println("Order " + orderId + " marked as PAID");
+                    order.setStatus(OrderStatus.PAID);
+                    orderRepository.save(order);
+
+                    System.out.println("Order " + orderId + " marked as PAID");
+                    return ResponseEntity.ok("Order payment completed");
+                }
+
+                return ResponseEntity.badRequest().body("No valid metadata found");
 
             } catch (Exception e) {
                 return ResponseEntity.badRequest().body("Error processing session: " + e.getMessage());

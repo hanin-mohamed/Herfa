@@ -1,4 +1,4 @@
-package com.ProjectGraduation.Events.entity;
+package com.ProjectGraduation.events.entity;
 
 import com.ProjectGraduation.auth.entity.User;
 import jakarta.persistence.*;

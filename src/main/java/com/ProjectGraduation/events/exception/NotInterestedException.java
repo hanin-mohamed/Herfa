@@ -1,4 +1,4 @@
-package com.ProjectGraduation.Events.exception;
+package com.ProjectGraduation.events.exception;
 
 public class NotInterestedException extends RuntimeException {
     public NotInterestedException(String message) {

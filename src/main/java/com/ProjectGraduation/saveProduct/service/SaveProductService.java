@@ -1,4 +1,4 @@
-package com.ProjectGraduation.SaveProduct.service;
+package com.ProjectGraduation.saveProduct.service;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;

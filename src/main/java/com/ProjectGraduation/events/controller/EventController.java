@@ -1,10 +1,10 @@
-package com.ProjectGraduation.Events.controller;
+package com.ProjectGraduation.events.controller;
 
-import com.ProjectGraduation.Events.entity.Event;
-import com.ProjectGraduation.Events.exception.AlreadyInterestedException;
-import com.ProjectGraduation.Events.exception.EventNotFoundException;
-import com.ProjectGraduation.Events.exception.NotInterestedException;
-import com.ProjectGraduation.Events.service.EventService;
+import com.ProjectGraduation.events.entity.Event;
+import com.ProjectGraduation.events.exception.AlreadyInterestedException;
+import com.ProjectGraduation.events.exception.EventNotFoundException;
+import com.ProjectGraduation.events.exception.NotInterestedException;
+import com.ProjectGraduation.events.service.EventService;
 import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.product.exception.FileUploadException;
