@@ -9,7 +9,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class StripeConfig {
 
-    String stripeSecretKey = Dotenv.load().get("STRIPE_SECRET_KEY");
+//    String stripeSecretKey = Dotenv.load().get("STRIPE_SECRET_KEY");
+    @Value("${STRIPE_SECRET_KEY}")
+    private String stripeSecretKey;
     @PostConstruct
     public void setup() {
         System.out.println("Stripe Secret Key: " + stripeSecretKey);

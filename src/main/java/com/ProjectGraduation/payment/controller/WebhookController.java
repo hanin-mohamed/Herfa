@@ -11,6 +11,7 @@ import com.stripe.model.Event;
 import com.stripe.net.Webhook;
 import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,10 @@ public class WebhookController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
 
-    private final String endpointSecret = Dotenv.load().get("STRIPE_WEBHOOK_SECRET");
+//    private final String endpointSecret = Dotenv.load().get("STRIPE_WEBHOOK_SECRET");
+    @Value("${STRIPE_WEBHOOK_SECRET}")
+    private String endpointSecret;
+
 
     @PostMapping
     public ResponseEntity<String> handleStripeEvent(@RequestBody String payload,

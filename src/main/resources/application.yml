@@ -9,15 +9,15 @@ spring:
 #      maximum-pool-size: 10
 
   datasource:
-    url: jdbc:mysql://trolley.proxy.rlwy.net:53734/railway?useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://ballast.proxy.rlwy.net:42008/railway?useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: YLWYGTCfWdSDOnLnbshXkgvKOQTNPUOA
+    password: mBhtFNhgNLsOBBVEinhARTYHAdYSpzNL
     driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+  hikari:
+    maximum-pool-size: 10
+    connection-timeout: 30000
+    idle-timeout: 600000
+    max-lifetime: 1800000
 
   jpa:
     hibernate:
@@ -83,3 +83,7 @@ base:
   url: "http://localhost:9292"
 
 
+STRIPE_SECRET_KEY:
+  sk_test_51RLL9FE2kb6bjtHxTamrhWhodYcsa9FBQTSUpOXjvt9uKMTCunNDc0VyR0DwoKuBahjOudcQdmtVkGZYBcWCsklJ00cuQeI9lG
+STRIPE_WEBHOOK_SECRET:
+  whsec_296aaf1f43d3c2d5c388fa1241c581869aca15478ee2f1dfd2b858c6aad505ab
