@@ -1,6 +1,7 @@
 package com.ProjectGraduation.aucation.service;
 
 import com.ProjectGraduation.aucation.dto.AuctionResponseDTO;
+import com.ProjectGraduation.aucation.dto.BidResponseDTO;
 import com.ProjectGraduation.aucation.entity.AuctionItem;
 import com.ProjectGraduation.aucation.entity.Bid;
 import com.ProjectGraduation.aucation.repository.AuctionItemRepository;
@@ -10,6 +11,7 @@ import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.product.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +29,23 @@ public class AuctionService {
     private final AuctionItemRepository auctionRepo;
     private final FileService fileService;
     private final BidRepository bidRepo;
+    private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Value("${project.poster}")
     private String uploadPath;
-    private final UserRepository userRepository;
 
     public AuctionResponseDTO createAuction(User user, MultipartFile image, String title,
                                             String description, double startingBid,
                                             LocalDateTime startTime, LocalDateTime endTime) throws Exception {
         if (startTime.isAfter(endTime)) {
             throw new IllegalArgumentException("Start time must be before end time.");
+        }
+        if (startTime.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Start time cannot be in the past.");
+        }
+        if (image.isEmpty()) {
+            throw new IllegalArgumentException("Image cannot be empty.");
         }
 
         String fileName = fileService.uploadFile(uploadPath, image, user.getId(), "auction", title);
@@ -81,10 +90,33 @@ public class AuctionService {
 
             auction.setWinner(winner);
             userRepository.save(winner);
+
+            // Notify winner
+            messagingTemplate.convertAndSendToUser(
+                    winner.getUsername(),
+                    "/queue/auction-result",
+                    BidResponseDTO.builder()
+                            .success(true)
+                            .message("Congratulations! You won auction #" + auctionId)
+                            .auctionId(auctionId)
+                            .currentBid(bidAmount)
+                            .highestBidder(winner.getUsername())
+                            .build()
+            );
         });
 
         auction.setActive(false);
         auctionRepo.save(auction);
+
+        // Notify all clients that the auction has ended
+        messagingTemplate.convertAndSend("/topic/bid/" + auctionId,
+                BidResponseDTO.builder()
+                        .success(false)
+                        .message("Auction has ended")
+                        .auctionId(auctionId)
+                        .highestBidder(topBid.map(bid -> bid.getUser().getUsername()).orElse(null))
+                        .currentBid(auction.getCurrentBid())
+                        .build());
     }
 
     public void finalizeExpiredAuctions() {
@@ -98,7 +130,7 @@ public class AuctionService {
         }
     }
 
-    @Scheduled(fixedRate = 60000)
+//    @Scheduled(fixedRate = 60000)
     public void autoFinalizeAuctions() {
         finalizeExpiredAuctions();
     }
@@ -116,9 +148,9 @@ public class AuctionService {
                 .active(auction.isActive())
                 .createdByUsername(auction.getCreatedBy().getUsername())
                 .createdByWallet(auction.getCreatedBy().getWalletBalance())
+                .highestBidder(auction.getHighestBidder() != null ? auction.getHighestBidder().getUsername() : null)
                 .build();
     }
-
     public List<AuctionResponseDTO> getAllAuctions() {
         return auctionRepo.findAll().stream()
                 .map(this::toDTO)

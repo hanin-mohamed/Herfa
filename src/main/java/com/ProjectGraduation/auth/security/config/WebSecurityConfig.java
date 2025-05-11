@@ -28,8 +28,8 @@ public class WebSecurityConfig {
                                 "/auth/reset/**","/auth/resend/**",  "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/webhook"
-                        ).permitAll() // Public endpoin
+                                "/webhook","/auction-bid.html","/ws/**"
+                        ).permitAll() // Public endpoint
                         .requestMatchers("/profiles/**").authenticated()
                         .requestMatchers("/payment/**").authenticated()
                         .requestMatchers("/auctions/**").authenticated()
@@ -38,7 +38,7 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-
         return http.build();
     }
+
 }

@@ -23,4 +23,5 @@ public class AuctionResponseDTO {
     private boolean active;
     private String createdByUsername;
     private double createdByWallet;
+    private String highestBidder;
 }

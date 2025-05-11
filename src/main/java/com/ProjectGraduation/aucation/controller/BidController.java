@@ -1,36 +1,32 @@
 package com.ProjectGraduation.aucation.controller;
 
 
-import com.ProjectGraduation.aucation.entity.Bid;
+import com.ProjectGraduation.aucation.dto.BidResponseDTO;
 import com.ProjectGraduation.aucation.service.BidService;
-import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.service.JWTService;
-import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.common.ApiResponse;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/bids")
 public class BidController {
 
     private final BidService bidService;
-    private final JWTService jwtService;
-    private final UserService userService;
-
-    @PostMapping("/auctions/{auctionId}")
-    public ResponseEntity<ApiResponse> makeBid(@RequestHeader("Authorization") String token, @PathVariable Long auctionId,
-                                                @RequestParam double amount) {
+    @GetMapping("/auction/{auctionId}/all-bids")
+    @PreAuthorize("hasAnyAuthority('ROLE_MERCHANT', 'ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse> getAllBidsForAuction(@PathVariable Long auctionId) {
         try {
-            String username = jwtService.getUsername(token.replace("Bearer ", ""));
-            User user = userService.getUserByUsername(username);
-            Bid bid = bidService.makeBid(auctionId, user, amount);
-            return ResponseEntity.ok(new ApiResponse(true, "Bid placed successfully!", bid));
+            List<BidResponseDTO> bids = bidService.getBidsForAuction(auctionId);
+            return ResponseEntity.ok(new ApiResponse(true, "All bids fetched for auction " + auctionId, bids));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, "Failed to place bid: " + e.getMessage(), null));
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
         }
     }
+
 }

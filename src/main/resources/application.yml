@@ -29,6 +29,7 @@ spring:
     database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
 
+
   mail:
     host: smtp.gmail.com
     port: 587

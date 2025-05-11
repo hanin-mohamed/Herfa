@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "auction_item")
+@Table(name = "auction_item", indexes = {
+        @Index(name = "idx_end_time_active", columnList = "endTime, active")
+})
 public class AuctionItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,4 +39,7 @@ public class AuctionItem {
 
     @ManyToOne
     private User winner;
+
+    @ManyToOne
+    private User highestBidder;
 }
