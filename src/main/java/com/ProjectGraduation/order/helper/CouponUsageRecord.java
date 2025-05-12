@@ -1,6 +1,6 @@
 package com.ProjectGraduation.order.helper;
 
-import com.ProjectGraduation.offers.coupons.entity.Coupon;
+import com.ProjectGraduation.offers.coupon.entity.Coupon;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor

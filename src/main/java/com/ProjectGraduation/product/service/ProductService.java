@@ -1,7 +1,7 @@
 package com.ProjectGraduation.product.service;
 
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.offers.productoffers.service.ProductOfferService;
+import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.repo.ProductRepository;

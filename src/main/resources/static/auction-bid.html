@@ -1,63 +1,78 @@
-<!--<!DOCTYPE html>-->
-<!--<html>-->
-<!--<head>-->
-<!--    <title>Auction WebSocket Test</title>-->
-<!--    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>-->
-<!--    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>-->
-<!--</head>-->
-<!--<body>-->
-<!--<h2>Auction Bidding Test</h2>-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auction WebSocket Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>Auction Bidding Test</h2>
 
-<!--<label>Auction ID: <input type="number" id="auctionId" value="1" /></label><br>-->
-<!--<label>Bid Amount: <input type="number" id="amount" value="300" /></label><br>-->
-<!--<label>JWT Token: <input type="text" id="token" style="width: 400px;" /></label><br>-->
-<!--<button onclick="connect()">Connect</button>-->
-<!--<button onclick="sendBid()">Send Bid</button>-->
+<label>Auction ID: <input type="number" id="auctionId" value="1" /></label><br>
+<label>Bid Amount: <input type="number" id="amount" value="300" /></label><br>
+<label>JWT Token: <input type="text" id="token" style="width: 500px;" /></label><br><br>
 
-<!--<h3>Logs:</h3>-->
-<!--<pre id="log"></pre>-->
+<button onclick="connect()">Connect</button>
+<button onclick="sendBid()">Send Bid</button>
 
-<!--<script>-->
-<!--    let stompClient = null;-->
+<h3>Logs:</h3>
+<pre id="log" style="background-color:#f5f5f5; padding:10px; border:1px solid #ccc;"></pre>
 
-<!--    function log(message) {-->
-<!--        document.getElementById('log').innerText += message + "\n";-->
-<!--    }-->
+<script>
+    let stompClient = null;
 
-<!--    function connect() {-->
-<!--        const socket = new SockJS("http://localhost:9994/ws");-->
-<!--        stompClient = Stomp.over(socket);-->
+    function log(message, type = 'info') {
+        const logBox = document.getElementById('log');
+        const prefix = type === 'error' ? "[ERROR] " : type === 'broadcast' ? "[BID] " : "";
+        logBox.innerText += prefix + message + "\n";
+    }
 
-<!--        const token = document.getElementById("token").value;-->
+    function connect() {
+        const token = document.getElementById("token").value;
+        const encodedToken = encodeURIComponent(token);
 
-<!--        stompClient.connect(-->
-<!--            { Authorization: "Bearer " + token },-->
-<!--            frame => {-->
-<!--                log("Connected: " + frame);-->
+        alert("📡 Trying to connect with token:\n" + token); // 🔍 Debug Alert
 
-<!--                const auctionId = document.getElementById("auctionId").value;-->
+        const socket = new SockJS("http://localhost:9994/ws?token=" + encodedToken, null, {
+            transports: ['websocket', 'xhr-streaming', 'xhr-polling']
+        });
 
-<!--                stompClient.subscribe("/topic/bid/" + auctionId, message => {-->
-<!--                    log("Broadcast: " + message.body);-->
-<!--                });-->
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
 
-<!--                stompClient.subscribe("/user/queue/outbid", message => {-->
-<!--                    log("Outbid Alert: " + message.body);-->
-<!--                });-->
-<!--            },-->
-<!--            error => {-->
-<!--                log("Connection failed: " + error);-->
-<!--            }-->
-<!--        );-->
-<!--    }-->
+        stompClient.connect({}, frame => {
+            log("Connected: " + frame);
 
-<!--    function sendBid() {-->
-<!--        const auctionId = document.getElementById("auctionId").value;-->
-<!--        const amount = parseFloat(document.getElementById("amount").value);-->
+            const auctionId = document.getElementById("auctionId").value;
 
-<!--        stompClient.send("/app/bid.send." + auctionId, {}, JSON.stringify({ amount }));-->
-<!--        log("Bid sent: " + amount);-->
-<!--    }-->
-<!--</script>-->
-<!--</body>-->
-<!--</html>-->
+            stompClient.subscribe("/topic/bid/" + auctionId, message => {
+                log(message.body, 'broadcast');
+            });
+
+            stompClient.subscribe("/user/queue/bid-error", message => {
+                log(message.body, 'error');
+            });
+
+            stompClient.subscribe("/user/queue/outbid", message => {
+                log("Outbid Alert: " + message.body, 'error');
+            });
+
+        }, error => {
+            log("Connection failed: " + error, 'error');
+        });
+    }
+
+    function sendBid() {
+        const auctionId = document.getElementById("auctionId").value;
+        const amount = parseFloat(document.getElementById("amount").value);
+
+        if (stompClient && stompClient.connected) {
+            stompClient.send("/app/bid.send." + auctionId, {}, JSON.stringify({ amount }));
+            log("Bid sent: " + amount);
+        } else {
+            log("You're not connected to WebSocket", 'error');
+        }
+    }
+</script>
+</body>
+</html>

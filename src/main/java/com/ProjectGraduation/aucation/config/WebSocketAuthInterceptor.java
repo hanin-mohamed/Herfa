@@ -23,22 +23,40 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-
         if (request instanceof ServletServerHttpRequest servletRequest) {
             String token = servletRequest.getServletRequest().getHeader("Authorization");
 
-            if (token != null && token.startsWith("Bearer ")) {
-                String username = jwtService.getUsername(token.replace("Bearer ", ""));
-                User user = userService.getUserByUsername(username);
-                attributes.put("username", username);
-                attributes.put("user", user);
-                return true;
+            if (token == null) {
+                token = servletRequest.getServletRequest().getParameter("token");
+            }
+
+            System.out.println("💡 WebSocket TOKEN RECEIVED: " + token);
+
+            if (token != null) {
+                if (token.startsWith("Bearer ")) {
+                    token = token.replace("Bearer ", "");
+                }
+
+                try {
+                    String username = jwtService.getUsername(token);
+                    User user = userService.getUserByUsername(username);
+
+                    attributes.put("username", username);
+                    attributes.put("user", user);
+
+                    System.out.println("✅ WebSocket Authenticated as: " + username);
+                    return true;
+                } catch (Exception e) {
+                    System.out.println("❌ WebSocket token invalid: " + e.getMessage());
+                }
             }
         }
 
+        System.out.println("❌ WebSocket connection rejected (missing or invalid token)");
         response.setStatusCode(org.springframework.http.HttpStatus.FORBIDDEN);
         return false;
     }
+
 
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,

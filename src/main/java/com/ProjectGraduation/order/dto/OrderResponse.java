@@ -1,6 +1,6 @@
 package com.ProjectGraduation.order.dto;
 
-import com.ProjectGraduation.offers.productoffers.dto.AppliedOfferDTO;
+import com.ProjectGraduation.offers.productoffer.dto.AppliedOfferDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

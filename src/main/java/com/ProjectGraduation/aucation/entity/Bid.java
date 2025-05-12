@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +22,8 @@ public class Bid {
     private Long id;
 
     private double bidAmount;
+
+    @CreationTimestamp
     private LocalDateTime bidTime;
 
     @ManyToOne

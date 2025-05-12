@@ -1,6 +1,6 @@
 spring:
 
-#  datasource:
+  datasource:
 #    url: jdbc:mysql://localhost:3306/herfa_db
 #    username: root
 #    password: hanona
@@ -8,7 +8,6 @@ spring:
 #    hikari:
 #      maximum-pool-size: 10
 
-  datasource:
     url: jdbc:mysql://ballast.proxy.rlwy.net:42008/railway?useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: mBhtFNhgNLsOBBVEinhARTYHAdYSpzNL
@@ -18,6 +17,9 @@ spring:
     connection-timeout: 30000
     idle-timeout: 600000
     max-lifetime: 1800000
+  websocket:
+    sockjs:
+      suppress-origin-check: true
 
   jpa:
     hibernate:

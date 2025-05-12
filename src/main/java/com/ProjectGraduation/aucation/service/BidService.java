@@ -35,26 +35,37 @@ public class BidService {
             return BidResponseDTO.failed("Auction hasn't started yet", auctionId);
         }
 
-        if (amount <= auction.getCurrentBid()) {
-            return BidResponseDTO.failed("Bid must be higher than current", auctionId);
+        if (auction.getHighestBidder() != null && auction.getHighestBidder().getId().equals(user.getId())) {
+            return BidResponseDTO.failed("You already have the highest bid", auctionId);
         }
 
-        if (amount < auction.getStartingBid() * 1.05) { // Require at least 5% higher than starting bid
-            return BidResponseDTO.failed("Bid must be at least 5% higher than starting bid", auctionId);
+        // minimum bid check
+        double minIncrement = auction.getCurrentBid() * 0.10;
+        double minAcceptableBid = auction.getCurrentBid() + minIncrement;
+
+        if (amount < minAcceptableBid) {
+            return BidResponseDTO.failed("Minimum bid must be at least 10% higher than current bid (min: " + minAcceptableBid + ")", auctionId);
         }
 
-        if (user.getWalletBalance() < amount) {
-            return BidResponseDTO.failed("Insufficient balance", auctionId);
+        // First bid guarantee
+        boolean isFirstBid = bidRepo.findByAuctionItemAndUser(auction, user).isEmpty();
+        if (isFirstBid) {
+            double guarantee = auction.getStartingBid() * 0.10;
+            if (user.getWalletBalance() < guarantee) {
+                return BidResponseDTO.failed("Insufficient balance for entry guarantee", auctionId);
+            }
+
+            user.setWalletBalance(user.getWalletBalance() - guarantee);
+            user.setReservedBalance(user.getReservedBalance() + guarantee);
+            userRepo.save(user);
         }
 
-        user.setWalletBalance(user.getWalletBalance() - amount);
-        user.setReservedBalance(user.getReservedBalance() + amount);
-        userRepo.save(user);
-
+        // update the auction with the new bid
         auction.setCurrentBid(amount);
         auction.setHighestBidder(user);
         auctionRepo.save(auction);
 
+        // Save the new bid
         Bid newBid = new Bid();
         newBid.setAuctionItem(auction);
         newBid.setBidAmount(amount);
@@ -68,8 +79,11 @@ public class BidService {
                 .auctionId(auctionId)
                 .currentBid(amount)
                 .highestBidder(user.getUsername())
+                .bidTime(newBid.getBidTime())
                 .build();
     }
+
+
     public List<BidResponseDTO> getBidsForAuction(Long auctionId) {
         AuctionItem auction = auctionRepo.findById(auctionId)
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
@@ -80,10 +94,10 @@ public class BidService {
                         .auctionId(auctionId)
                         .currentBid(bid.getBidAmount())
                         .highestBidder(bid.getUser().getUsername())
+                        .bidTime(bid.getBidTime())
                         .success(true)
                         .message("Bid record")
                         .build())
                 .toList();
     }
-
 }

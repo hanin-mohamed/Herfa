@@ -37,14 +37,27 @@ public class AuctionBidSocketController {
             User user = userRepo.findByUsernameIgnoreCase(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
+            System.out.println("📨 handleBid CALLED with auctionId = " + auctionId + " by user " + user.getUsername());
+            System.out.println("🚀 amount = " + bidRequest.getAmount());
+
             BidResponseDTO response = bidService.makeBid(user, auctionId, bidRequest.getAmount());
 
-            // Broadcast result to everyone watching this auction
-            messagingTemplate.convertAndSend("/topic/bid/" + auctionId, response);
+            if (response.isSuccess()) {
+                messagingTemplate.convertAndSend("/topic/bid/" + auctionId, response);
+            } else {
+                messagingTemplate.convertAndSendToUser(
+                        user.getUsername(),
+                        "/queue/bid-error",
+                        response
+                );
+            }
 
         } catch (Exception e) {
+            e.printStackTrace();
             messagingTemplate.convertAndSend("/topic/bid/" + auctionId,
                     BidResponseDTO.failed("Failed to place bid: " + e.getMessage(), auctionId));
         }
     }
+
 }
+

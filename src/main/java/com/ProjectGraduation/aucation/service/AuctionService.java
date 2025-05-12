@@ -76,22 +76,48 @@ public class AuctionService {
         }
 
         Optional<Bid> topBid = bidRepo.findTopByAuctionItemOrderByBidAmountDesc(auction);
+        List<Bid> allBids = bidRepo.findByAuctionItem(auction);
+
+        double guarantee = auction.getStartingBid() * 0.10;
+
+        // Refund all bidders except the winner
+        for (Bid bid : allBids) {
+            User bidder = bid.getUser();
+
+            // Ignore winner
+            if (topBid.isPresent() && bidder.getId().equals(topBid.get().getUser().getId())) {
+                continue;
+            }
+
+            if (bidder.getReservedBalance() >= guarantee) {
+                bidder.setReservedBalance(bidder.getReservedBalance() - guarantee);
+                bidder.setWalletBalance(bidder.getWalletBalance() + guarantee);
+                userRepository.save(bidder);
+            }
+        }
 
         topBid.ifPresent(bid -> {
             User winner = bid.getUser();
             double bidAmount = bid.getBidAmount();
 
-            if (winner.getReservedBalance() < bidAmount) {
-                throw new RuntimeException("Reserved balance inconsistency for winner.");
+            double totalGuarantee = guarantee;
+            double remainingDue = bidAmount - totalGuarantee;
+
+            if (winner.getReservedBalance() < totalGuarantee) {
+                throw new RuntimeException("Reserved guarantee not found for winner");
             }
 
-            winner.setWalletBalance(winner.getWalletBalance() - bidAmount);
-            winner.setReservedBalance(winner.getReservedBalance() - bidAmount);
+            if (winner.getWalletBalance() < remainingDue) {
+                throw new RuntimeException("Insufficient wallet balance to complete payment");
+            }
 
-            auction.setWinner(winner);
+            // Deduct the guarantee and remaining due from the winner's balance
+            winner.setReservedBalance(winner.getReservedBalance() - totalGuarantee);
+            winner.setWalletBalance(winner.getWalletBalance() - remainingDue);
             userRepository.save(winner);
 
-            // Notify winner
+            auction.setWinner(winner);
+
             messagingTemplate.convertAndSendToUser(
                     winner.getUsername(),
                     "/queue/auction-result",
@@ -108,7 +134,6 @@ public class AuctionService {
         auction.setActive(false);
         auctionRepo.save(auction);
 
-        // Notify all clients that the auction has ended
         messagingTemplate.convertAndSend("/topic/bid/" + auctionId,
                 BidResponseDTO.builder()
                         .success(false)
@@ -117,6 +142,54 @@ public class AuctionService {
                         .highestBidder(topBid.map(bid -> bid.getUser().getUsername()).orElse(null))
                         .currentBid(auction.getCurrentBid())
                         .build());
+    }
+
+    public AuctionResponseDTO updateAuction(Long auctionId, User user,
+                                            String title, String description, Double startingBid,
+                                            LocalDateTime startTime, LocalDateTime endTime) {
+
+        AuctionItem auction = auctionRepo.findById(auctionId)
+                .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+        if (!auction.getCreatedBy().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized to update this auction");
+        }
+
+        if (auction.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Cannot update an auction that has already started");
+        }
+
+        if (title != null) auction.setTitle(title);
+        if (description != null) auction.setDescription(description);
+        if (startingBid != null) {
+            auction.setStartingBid(startingBid);
+            auction.setCurrentBid(startingBid);
+        }
+        if (startTime != null) auction.setStartTime(startTime);
+        if (endTime != null) auction.setEndTime(endTime);
+
+        AuctionItem updated = auctionRepo.save(auction);
+        return toDTO(updated);
+    }
+
+    public void deleteAuction(Long auctionId, User user) {
+        AuctionItem auction = auctionRepo.findById(auctionId)
+                .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+        if (!auction.getCreatedBy().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized to delete this auction");
+        }
+
+        if (auction.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Cannot delete auction that has already started");
+        }
+
+        boolean hasBids = !bidRepo.findByAuctionItem(auction).isEmpty();
+        if (hasBids) {
+            throw new RuntimeException("Cannot delete auction that already has bids");
+        }
+
+        auctionRepo.delete(auction);
     }
 
     public void finalizeExpiredAuctions() {
@@ -131,9 +204,9 @@ public class AuctionService {
     }
 
 //    @Scheduled(fixedRate = 60000)
-    public void autoFinalizeAuctions() {
-        finalizeExpiredAuctions();
-    }
+//    public void autoFinalizeAuctions() {
+//        finalizeExpiredAuctions();
+//    }
 
     private AuctionResponseDTO toDTO(AuctionItem auction) {
         return AuctionResponseDTO.builder()

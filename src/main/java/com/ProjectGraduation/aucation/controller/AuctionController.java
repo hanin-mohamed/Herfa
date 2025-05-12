@@ -1,6 +1,7 @@
 package com.ProjectGraduation.aucation.controller;
 
 import com.ProjectGraduation.aucation.dto.AuctionResponseDTO;
+import com.ProjectGraduation.aucation.dto.UpdateAuctionDTO;
 import com.ProjectGraduation.aucation.service.AuctionService;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.JWTService;
@@ -82,4 +83,71 @@ public class AuctionController {
         List<AuctionResponseDTO> list = auctionService.getActiveAuctions();
         return ResponseEntity.ok(new ApiResponse(true, "Active auctions fetched", list));
     }
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
+    public ResponseEntity<ApiResponse> updateAuction(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token,
+            @RequestBody UpdateAuctionDTO updateDTO) {
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            User user = userService.getUserByUsername(username);
+
+            LocalDateTime startTime = updateDTO.getStartTime() != null
+                    ? LocalDateTime.parse(updateDTO.getStartTime().trim()) : null;
+
+            LocalDateTime endTime = updateDTO.getEndTime() != null
+                    ? LocalDateTime.parse(updateDTO.getEndTime().trim()) : null;
+
+            AuctionResponseDTO updated = auctionService.updateAuction(
+                    id, user,
+                    updateDTO.getTitle(),
+                    updateDTO.getDescription(),
+                    updateDTO.getStartingBid(),
+                    startTime,
+                    endTime
+            );
+
+            return ResponseEntity.ok(new ApiResponse(true, "Auction updated", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
+    }
+
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
+    public ResponseEntity<ApiResponse> deleteAuction(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token) {
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            User user = userService.getUserByUsername(username);
+
+            auctionService.deleteAuction(id, user);
+            return ResponseEntity.ok(new ApiResponse(true, "Auction deleted successfully", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
+    }
+
+
+    @PostMapping("/{id}/finalize")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT', 'ROLE_ADMIN')")
+    public ResponseEntity<ApiResponse> finalizeAuctionByClient(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token) {
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            User user = userService.getUserByUsername(username);
+
+            auctionService.endAuction(id);
+
+            return ResponseEntity.ok(new ApiResponse(true, "Auction finalized by client", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
+    }
+
+
 }
