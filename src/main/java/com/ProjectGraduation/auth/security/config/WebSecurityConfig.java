@@ -28,7 +28,9 @@ public class WebSecurityConfig {
                                 "/auth/reset/**","/auth/resend/**",  "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/webhook","/auction-bid.html","/ws/**"
+                                "/webhook","/auction-bid.html","/ws/**",
+                                "/media/**", "/merchants/**", "/profiles/**",
+                                "/api/files/**"
                         ).permitAll() // Public endpoint
                         .requestMatchers("/profiles/**").authenticated()
                         .requestMatchers("/payment/**").authenticated()

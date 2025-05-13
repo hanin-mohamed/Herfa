@@ -1,9 +1,15 @@
 spring:
 
+  web:
+    resources:
+      static-locations: "file:${project.poster}"
+  mvc:
+    static-path-pattern: /media/**
+
   datasource:
-#    url: jdbc:mysql://localhost:3306/herfa_db
-#    username: root
-#    password: hanona
+#    url: jdbc:mysql://localhost:3306/herfadb
+#    username: springstudent
+#    password: springstudent
 #    driver-class-name: com.mysql.cj.jdbc.Driver
 #    hikari:
 #      maximum-pool-size: 10
@@ -35,7 +41,7 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: mf7373057@gmail.com  # Your full email address
+    username: mf7373057@gmail.com
     password: cfhhrlxyhiikbucn
     properties:
       mail:
@@ -82,8 +88,7 @@ project:
   poster: poster/
 
 base:
-  url: "http://localhost:9292"
-
+  url: "http://localhost:9994"
 
 STRIPE_SECRET_KEY:
   sk_test_51RLL9FE2kb6bjtHxTamrhWhodYcsa9FBQTSUpOXjvt9uKMTCunNDc0VyR0DwoKuBahjOudcQdmtVkGZYBcWCsklJ00cuQeI9lG
