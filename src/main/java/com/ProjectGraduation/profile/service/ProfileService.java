@@ -1,5 +1,6 @@
 package com.ProjectGraduation.profile.service;
 
+import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
@@ -101,15 +102,16 @@ public class ProfileService {
 
 
     @Transactional
-    public ProfileWithProductsDTO getProfileWithProducts(Long userId) {
-        User user = userRepository.findById(userId)
+    public ProfileWithProductsDTO getProfileWithProducts(Long merchantId) {
+        User user = userRepository.findById(merchantId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-
+        if (user.getRole() != Role.MERCHANT)
+            throw new UserNotFoundException("Requested user is not a merchant");
         Profile profile = profileRepo.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
         List<Product> products = productService.getMerchantProducts(user);
-        double averageRating = profileRatingService.getAverageRating(userId);
-        int numberOfRatings = profileRatingService.getRatingsForUser(userId).size();
+        double averageRating = profileRatingService.getAverageRating(merchantId);
+        int numberOfRatings = profileRatingService.getRatingsForUser(merchantId).size();
         ProfileWithProductsDTO dto = new ProfileWithProductsDTO();
         dto.setUserId(user.getId());
         dto.setFirstName(profile.getFirstName());

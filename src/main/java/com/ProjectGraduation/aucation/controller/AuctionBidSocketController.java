@@ -37,9 +37,6 @@ public class AuctionBidSocketController {
             User user = userRepo.findByUsernameIgnoreCase(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            System.out.println("📨 handleBid CALLED with auctionId = " + auctionId + " by user " + user.getUsername());
-            System.out.println("🚀 amount = " + bidRequest.getAmount());
-
             BidResponseDTO response = bidService.makeBid(user, auctionId, bidRequest.getAmount());
 
             if (response.isSuccess()) {
