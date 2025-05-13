@@ -105,6 +105,10 @@ public class ProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
+        if (!"MERCHANT".equals(user.getRole().toString())) {
+            throw new IllegalStateException("User is not a merchant");
+        }
+
         Profile profile = profileRepo.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
         List<Product> products = productService.getMerchantProducts(user);

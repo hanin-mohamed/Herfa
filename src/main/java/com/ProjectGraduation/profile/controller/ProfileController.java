@@ -33,72 +33,99 @@ public class ProfileController {
 
     @GetMapping("my-profile")
     public ResponseEntity<ApiResponse> getMyProfile(@RequestHeader("Authorization") String token) {
-        String username = jwtService.getUsername(token);
-        User user = userService.getUserByUsername(username);
-        Profile profile = profileService.getProfile(user);
-        return ResponseEntity.ok(new ApiResponse(true, "Profile fetched successfully", profile));
+        try {
+            String username = jwtService.getUsername(token);
+            User user = userService.getUserByUsername(username);
+            Profile profile = profileService.getProfile(user);
+            return ResponseEntity.ok(new ApiResponse(true, "Profile fetched successfully", profile));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
     }
 
     @PutMapping
     public ResponseEntity<ApiResponse> updateMyProfile(@RequestHeader("Authorization") String token,
                                                        @RequestBody UpdateProfileRequestDTO updateRequest) {
-        String username = jwtService.getUsername(token);
-        User user = userService.getUserByUsername(username);
-        Profile updatedProfile = profileService.updateProfile(user, updateRequest);
-        return ResponseEntity.ok(new ApiResponse(true, "Profile updated successfully", updatedProfile));
+        try {
+            String username = jwtService.getUsername(token);
+            User user = userService.getUserByUsername(username);
+            Profile updatedProfile = profileService.updateProfile(user, updateRequest);
+            return ResponseEntity.ok(new ApiResponse(true, "Profile updated successfully", updatedProfile));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
     }
 
     @PostMapping("/picture")
     public ResponseEntity<ApiResponse> uploadProfilePicture(@RequestHeader("Authorization") String token,
                                                             @RequestParam("file") MultipartFile file) {
-        String username = jwtService.getUsername(token);
-        User user = userService.getUserByUsername(username);
-        profileService.updateProfilePic(user, file);
-        return ResponseEntity.ok(new ApiResponse(true, "Profile picture updated successfully", null));
+        try {
+            String username = jwtService.getUsername(token);
+            User user = userService.getUserByUsername(username);
+            profileService.updateProfilePic(user, file);
+            Profile profile = profileService.getProfile(user);
+            return ResponseEntity.ok(new ApiResponse(true, "Profile picture updated successfully", profile.getProfilePictureUrl()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Failed to upload profile picture: " + e.getMessage(), null));
+        }
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse> viewProfileById(@PathVariable Long userId) {
-        Profile profile = profileService.getProfileByUserId(userId);
-        return ResponseEntity.ok(new ApiResponse(true, "Profile fetched successfully", profile));
+        try {
+            Profile profile = profileService.getProfileByUserId(userId);
+            return ResponseEntity.ok(new ApiResponse(true, "Profile fetched successfully", profile));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
     }
 
     @GetMapping("/merchant/{merchantId}")
     public ResponseEntity<ApiResponse> viewMerchantProfileById(@PathVariable Long merchantId) {
-        ProfileWithProductsDTO dto = profileService.getProfileWithProducts(merchantId);
-        return ResponseEntity.ok(new ApiResponse(true, "Merchant profile fetched successfully", dto));
+        try {
+            ProfileWithProductsDTO dto = profileService.getProfileWithProducts(merchantId);
+            return ResponseEntity.ok(new ApiResponse(true, "Merchant profile fetched successfully", dto));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
     }
 
     @GetMapping("/image/user/{userId}")
-    public ResponseEntity<byte[]> getProfileImage(@PathVariable Long userId) throws IOException {
-        Profile profile = profileService.getProfileByUserId(userId);
-        if (profile == null || profile.getProfilePictureUrl() == null) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> getProfileImage(@PathVariable Long userId) throws IOException {
+        try {
+            Profile profile = profileService.getProfileByUserId(userId);
+            if (profile == null || profile.getProfilePictureUrl() == null) {
+                return ResponseEntity.status(404).body(new ApiResponse(false, "Profile image not found", null));
+            }
+            String relativePath = profile.getProfilePictureUrl().replaceFirst(".*/profiles/image/", "");
+            File imageFile = new File(basePath + File.separator + relativePath.replace("/", File.separator));
+            if (!imageFile.exists()) {
+                return ResponseEntity.status(404).body(new ApiResponse(false, "Profile image not found", null));
+            }
+            byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+            return ResponseEntity.ok()
+                    .header("Content-Type", Files.probeContentType(imageFile.toPath()))
+                    .body(imageBytes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Error fetching profile image: " + e.getMessage(), null));
         }
-
-        String relativePath = profile.getProfilePictureUrl().replaceFirst(".*/profiles/image/", "");
-        File imageFile = new File(basePath + File.separator + relativePath.replace("/", File.separator));
-
-        if (!imageFile.exists()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
-        return ResponseEntity.ok()
-                .header("Content-Type", Files.probeContentType(imageFile.toPath()))
-                .body(imageBytes);
     }
 
     @GetMapping("/image/**")
-    public ResponseEntity<byte[]> serveImage(HttpServletRequest request) throws IOException {
-        String fullPath = request.getRequestURI().replace("/profiles/image/", "");
-        File file = new File(basePath + File.separator + fullPath);
-        if (!file.exists()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> serveImage(HttpServletRequest request) throws IOException {
+        try {
+            String fullPath = request.getRequestURI().replace("/profiles/image/", "");
+            File file = new File(basePath + File.separator + fullPath);
+            if (!file.exists()) {
+                return ResponseEntity.status(404).body(new ApiResponse(false, "Image not found", null));
+            }
+            byte[] imageBytes = Files.readAllBytes(file.toPath());
+            return ResponseEntity.ok()
+                    .header("Content-Type", Files.probeContentType(file.toPath()))
+                    .body(imageBytes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Error fetching image: " + e.getMessage(), null));
         }
-        byte[] imageBytes = Files.readAllBytes(file.toPath());
-        return ResponseEntity.ok()
-                .header("Content-Type", Files.probeContentType(file.toPath()))
-                .body(imageBytes);
+
     }
 }
