@@ -8,7 +8,7 @@ import com.ProjectGraduation.aucation.repository.AuctionItemRepository;
 import com.ProjectGraduation.aucation.repository.BidRepository;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
-import com.ProjectGraduation.product.service.FileService;
+import com.ProjectGraduation.file.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -27,7 +27,7 @@ import java.util.Optional;
 public class AuctionService {
 
     private final AuctionItemRepository auctionRepo;
-    private final FileService fileService;
+    private final CloudinaryService cloudinaryService;
     private final BidRepository bidRepo;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
@@ -48,7 +48,7 @@ public class AuctionService {
             throw new IllegalArgumentException("Image cannot be empty.");
         }
 
-        String fileName = fileService.uploadFile(uploadPath, image, user.getId(), "auction", title);
+        String uploadedFileName = cloudinaryService.uploadImage(  image ,"product", user.getId());
 
         AuctionItem auction = new AuctionItem();
         auction.setTitle(title);
@@ -58,7 +58,7 @@ public class AuctionService {
         auction.setStartTime(startTime);
         auction.setEndTime(endTime);
         auction.setCreatedBy(user);
-        auction.setImageUrl(fileName);
+        auction.setImageUrl(uploadedFileName);
 
         AuctionItem saved = auctionRepo.save(auction);
         return toDTO(saved);

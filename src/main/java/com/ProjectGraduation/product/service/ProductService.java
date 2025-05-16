@@ -1,6 +1,7 @@
 package com.ProjectGraduation.product.service;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.file.CloudinaryService;
 import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
@@ -20,7 +21,7 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final FileService fileService;
+    private final CloudinaryService cloudinaryService;
     private final ProductOfferService productOfferService;
     @Value("${project.poster}")
     private String path;
@@ -47,7 +48,7 @@ public class ProductService {
             throw new InvalidProductDataException("Product image file is required");
         }
 
-        String uploadedFileName = fileService.uploadFile(path, file, user.getId(), "product", product.getName());
+        String uploadedFileName = cloudinaryService.uploadImage(  file ,"product", user.getId());
         product.setMedia(uploadedFileName);
 
         if (product.getColors() == null || product.getColors().isEmpty()) {
@@ -71,7 +72,7 @@ public class ProductService {
             if (existingProduct.getMedia() != null) {
                 Files.deleteIfExists(Paths.get(path + File.separator + existingProduct.getMedia()));
             }
-            String uploadedFileName = fileService.uploadFile(path, file, product.getUser().getId(), "product", product.getName());
+            String uploadedFileName = cloudinaryService.uploadImage(  file ,"product", user.getId());
             existingProduct.setMedia(uploadedFileName);
         }
 

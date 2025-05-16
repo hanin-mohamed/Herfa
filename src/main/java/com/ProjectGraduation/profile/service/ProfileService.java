@@ -4,8 +4,8 @@ import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
+import com.ProjectGraduation.file.CloudinaryService;
 import com.ProjectGraduation.product.entity.Product;
-import com.ProjectGraduation.product.service.FileService;
 import com.ProjectGraduation.product.service.ProductService;
 import com.ProjectGraduation.profile.dto.ProfileWithProductsDTO;
 import com.ProjectGraduation.profile.dto.UpdateProfileRequestDTO;
@@ -29,7 +29,7 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final ProductService productService;
     private final ProfileRatingService profileRatingService;
-    private final  FileService fileService;
+    private final CloudinaryService cloudinaryService;
 
     @Value("${project.poster}")
     private String basePath;
@@ -41,10 +41,11 @@ public class ProfileService {
 
     public Profile getProfile(User user) {
         return profileRepo.findByUser(user)
-                .orElseThrow(() -> new IllegalStateException("Profile not found for this user"));
+                .orElseThrow(() -> new IllegalStateException("Profile not found for user with ID: " + user.getId()));
     }
 
     public Profile updateProfile(User user, UpdateProfileRequestDTO updateRequest) {
+        try {
         Profile profile = profileRepo.findByUser(user)
                 .orElseGet(() -> {
                     Profile newProfile = new Profile();
@@ -69,10 +70,16 @@ public class ProfileService {
         }
 
         return profileRepo.save(profile);
+    }catch (Exception e){
+        throw new RuntimeException("Failed to update profile "+ e.getMessage());}
     }
 
 
-    public void updateProfilePic(User user, MultipartFile file) {
+    public String updateProfilePic(User user, MultipartFile file) {
+        try {
+            if (!file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");}
+
         Profile profile = profileRepo.findByUser(user)
                 .orElseGet(() -> {
                     Profile newProfile = new Profile();
@@ -80,39 +87,52 @@ public class ProfileService {
                     return profileRepo.save(newProfile);
                 });
 
-        try {
-            String storedPath = fileService.uploadFile(basePath, file, user.getId(), "profile", user.getUsername());
-            String imageUrl = baseUrl + "profiles/image/" + storedPath.replace(" ", "%20").replace("\\", "/");
-            profile.setProfilePictureUrl(imageUrl);
+            String uploadedFileName = cloudinaryService.uploadImage(  file ,"profile", user.getId());
+
+            profile.setProfilePictureUrl(uploadedFileName);
+
             profileRepo.save(profile);
+
+            return uploadedFileName ;
+
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload profile picture", e);
+            throw new RuntimeException("Failed to upload profile picture "+ e.getMessage());
         }
     }
 
 
     public Profile getProfileByUserId(Long userId) {
+        try {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
         return profileRepo.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Profile not found for this user"));
+                .orElseThrow(() -> new RuntimeException("Profile not found for user with ID: " + userId));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch profile "+ e.getMessage());
+        }
     }
 
 
 
     @Transactional
     public ProfileWithProductsDTO getProfileWithProducts(Long userId) {
+
+        try {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
         if (user.getRole() != Role.MERCHANT) {
             throw new UserNotFoundException("Requested user is not a merchant");
         }
         Profile profile = profileRepo.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new RuntimeException("Profile not found for user with ID: " + userId));
+
         List<Product> products = productService.getMerchantProducts(user);
+
         double averageRating = profileRatingService.getAverageRating(userId);
+
         int numberOfRatings = profileRatingService.getRatingsForUser(userId).size();
+
         ProfileWithProductsDTO dto = new ProfileWithProductsDTO();
         dto.setUserId(user.getId());
         dto.setFirstName(profile.getFirstName());
@@ -125,6 +145,9 @@ public class ProfileService {
         dto.setAverageRating(averageRating);
         dto.setNumberOfRatings(numberOfRatings);
         return dto;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch profile with products "+ e.getMessage());
+        }
     }
 
 }

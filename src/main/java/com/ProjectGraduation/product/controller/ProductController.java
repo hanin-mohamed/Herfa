@@ -5,21 +5,27 @@ import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.category.entity.Category;
+import com.ProjectGraduation.product.dto.ProductDTO;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.category.service.CategoryService;
 import com.ProjectGraduation.product.service.ProductService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/products")
@@ -31,87 +37,87 @@ public class ProductController {
     private final UserService userService;
     private final CategoryService categoryService;
 
-    @PostMapping()
+    @PostMapping
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> addNewProduct(
             @RequestHeader("Authorization") String token,
-            @RequestPart("file") MultipartFile file,
-            @RequestPart("name") String name,
-            @RequestPart("short_description") String shortDescription,
-            @RequestPart("long_description") String longDescription,
-            @RequestPart("price") String price,
-            @RequestPart("quantity") String quantity,
-            @RequestPart("active") String active,
-            @RequestPart("category_id") String categoryId,
-            @RequestPart("colors") String colors) {
+            @Valid @ModelAttribute ProductDTO productRequest) {
         try {
             String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
             User user = userService.getUserByUsername(merchantUsername);
 
             Product product = new Product();
-            product.setName(name);
-            product.setShortDescription(shortDescription);
-            product.setLongDescription(longDescription);
-            product.setPrice(Double.parseDouble(price));
-            product.setQuantity(Integer.parseInt(quantity));
-            product.setActive(Boolean.parseBoolean(active));
+            product.setName(productRequest.getName());
+            product.setShortDescription(productRequest.getShortDescription());
+            product.setLongDescription(productRequest.getLongDescription());
+            product.setPrice(productRequest.getPrice());
+            product.setQuantity(productRequest.getQuantity());
+            product.setActive(productRequest.getActive());
             product.setUser(user);
-            Category category = categoryService.getCategoryById(Long.parseLong(categoryId));
+
+            Category category = categoryService.getCategoryById(productRequest.getCategoryId());
             product.setCategory(category);
-            product.setColors(Collections.singletonList(colors));
-            Product savedProduct = productService.addNewProduct(product, file);
-            return ResponseEntity.ok(new ApiResponse(true, "Product added successfully", savedProduct));
+            product.setColors(productRequest.getColors());
+
+            Product savedProduct = productService.addNewProduct(product, productRequest.getFile());
+            return ResponseEntity.ok(
+                    new ApiResponse(true,"Product added successfully", savedProduct)
+            );
         } catch (InvalidProductDataException | UnauthorizedMerchantException | CategoryNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse(false, ex.getMessage(), null));
+                    .body(new ApiResponse(false,"Failed",ex.getMessage()));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(false, "Failed to add product: " + ex.getMessage(), null));
+                    .body(new ApiResponse(false,"Failed to add product: " , ex.getMessage()));
         }
     }
 
-    @PutMapping()
+    @PutMapping
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> updateProduct(
             @RequestHeader("Authorization") String token,
-            @RequestPart("product_id") String productId,
-            @RequestPart("file") MultipartFile file,
-            @RequestPart("name") String name,
-            @RequestPart("short_description") String shortDescription,
-            @RequestPart("long_description") String longDescription,
-            @RequestPart("price") String price,
-            @RequestPart("quantity") String quantity,
-            @RequestPart("active") String active,
-            @RequestPart("category_id") String categoryId,
-            @RequestPart("colors") String colors) {
+            @RequestParam("product_id") Long productId,
+            @Valid @ModelAttribute ProductDTO productRequest) {
         try {
             String merchantUsername = jwtService.getUsername(token.replace("Bearer ", ""));
             User user = userService.getUserByUsername(merchantUsername);
 
             Product product = new Product();
-            product.setName(name);
-            product.setShortDescription(shortDescription);
-            product.setLongDescription(longDescription);
-            product.setPrice(Double.parseDouble(price));
-            product.setQuantity(Integer.parseInt(quantity));
-            product.setActive(Boolean.parseBoolean(active));
+            product.setName(productRequest.getName());
+            product.setShortDescription(productRequest.getShortDescription());
+            product.setLongDescription(productRequest.getLongDescription());
+            product.setPrice(productRequest.getPrice());
+            product.setQuantity(productRequest.getQuantity());
+            product.setActive(productRequest.getActive());
             product.setUser(user);
+            product.setColors(productRequest.getColors());
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<String> color = objectMapper.readValue(colors, new TypeReference<List<String>>() {});
-            product.setColors(color);
-            Category category = categoryService.getCategoryById(Long.parseLong(categoryId));
+            Category category = categoryService.getCategoryById(productRequest.getCategoryId());
             product.setCategory(category);
 
-            Product updatedProduct = productService.updateProduct(Long.parseLong(productId), product, file);
-            return ResponseEntity.ok(new ApiResponse(true, "Product updated successfully", updatedProduct));
+            Product updatedProduct = productService.updateProduct(productId, product, productRequest.getFile());
+            return ResponseEntity.ok(
+                    new ApiResponse(true,"Product updated successfully", updatedProduct)
+            );
         } catch (ProductNotFoundException | UnauthorizedMerchantException | CategoryNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse(false, ex.getMessage(), null));
+                    .body(new ApiResponse(false,"Filed",ex.getMessage()));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(false, "Failed to update product: " + ex.getMessage(), null));
+                    .body(new ApiResponse(false,"Failed to update product: " , ex.getMessage()));
         }
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse(false,"Validation failed", errors));
     }
 
     @GetMapping("/active")

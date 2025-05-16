@@ -6,10 +6,10 @@ import com.ProjectGraduation.event.repo.EventRepo;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
+import com.ProjectGraduation.file.CloudinaryService;
 import com.ProjectGraduation.product.exception.FileUploadException;
 import com.ProjectGraduation.product.exception.UnauthorizedMerchantException;
-import com.ProjectGraduation.product.service.FileService;
-import com.ProjectGraduation.auth.exception.UserNotFoundException;
+ import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class EventService {
     private final EventRepo eventRepository;
     private final UserRepository userRepository;
     private final JWTService jwtService;
-    private final FileService fileService;
+    private final CloudinaryService cloudinaryService;
 
     @Value("${project.poster}")
     private String path;
@@ -44,9 +44,9 @@ public class EventService {
             throw new UnauthorizedMerchantException("You are not a merchant.");
         }
 
-        String mediaFileName;
+        String uploadedFileName;
         try {
-            mediaFileName = fileService.uploadFile(path, media, user.getId(), "event", name);
+              uploadedFileName = cloudinaryService.uploadImage(  media ,"Event", user.getId());
         } catch (IOException e) {
             throw new FileUploadException("Failed to upload media file: " + e.getMessage());
         }
@@ -54,7 +54,7 @@ public class EventService {
         Event event = new Event();
         event.setName(name);
         event.setDescription(description);
-        event.setMedia(mediaFileName);
+        event.setMedia(uploadedFileName);
         event.setStartTime(startTime);
         event.setEndTime(endTime);
         event.setPrice(price);
