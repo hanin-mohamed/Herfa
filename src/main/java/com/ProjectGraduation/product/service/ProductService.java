@@ -68,7 +68,7 @@ public class ProductService {
             throw new UnauthorizedMerchantException("Only merchants can update products");
         }
 
-        if (file != null && !file.isEmpty()) {
+        if (file == null && file.isEmpty()) {
             if (existingProduct.getMedia() != null) {
                 Files.deleteIfExists(Paths.get(path + File.separator + existingProduct.getMedia()));
             }

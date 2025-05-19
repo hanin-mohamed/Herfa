@@ -35,7 +35,7 @@ public class RegistrationBody {
     @NotBlank
     private String lastName;
 
-    @NotNull // Use @NotNull for enums
+    @NotNull
     private Role role;
 
 }

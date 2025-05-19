@@ -77,7 +77,7 @@ public class ProfileService {
 
     public String updateProfilePic(User user, MultipartFile file) {
         try {
-            if (!file.isEmpty()) {
+            if (file.isEmpty()) {
             throw new IllegalArgumentException("File is empty");}
 
         Profile profile = profileRepo.findByUser(user)
