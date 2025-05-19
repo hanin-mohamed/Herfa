@@ -28,7 +28,6 @@ public class AutoOfferController {
     private final UserService userService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse> createAutoOffer(
             @RequestBody AutoOfferRequest request, Authentication authentication) {
         try {
@@ -43,7 +42,6 @@ public class AutoOfferController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse> update(@PathVariable Long id, @RequestBody AutoOffer data) {
         try {
             if (data.getProduct() != null && data.getProduct().getId() != null) {
@@ -72,7 +70,6 @@ public class AutoOfferController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse> toggleStatus(
             @PathVariable Long id, @RequestParam boolean active) {
         try {
@@ -98,7 +95,6 @@ public class AutoOfferController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse> listAll() {
         try {
             return ResponseEntity.ok(new ApiResponse(true, "All auto offers fetched", autoOfferService.listAll()));
@@ -135,7 +131,6 @@ public class AutoOfferController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse> delete(@PathVariable Long id) {
         try {
             autoOfferService.delete(id);
