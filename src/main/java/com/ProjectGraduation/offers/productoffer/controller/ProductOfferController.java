@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 @RestController
 @RequestMapping("/offers")
 @RequiredArgsConstructor
@@ -35,32 +34,43 @@ public class ProductOfferController {
             @RequestParam LocalDateTime startDate,
             @RequestParam LocalDateTime endDate) {
 
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        User merchant = userService.getUserByUsername(username);
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            User merchant = userService.getUserByUsername(username);
 
-        List<Product> products = productService.getProductsByIds(productIds);
+            List<Product> products = productService.getProductsByIds(productIds);
 
-        for (Product product : products) {
-            if (!product.getUser().getId().equals(merchant.getId())) {
-                throw new RuntimeException("Product(s) don't belong to the current merchant");
+            for (Product product : products) {
+                if (!product.getUser().getId().equals(merchant.getId())) {
+                    return ResponseEntity.status(403)
+                            .body(new ApiResponse(false, "Some products don't belong to the current merchant", null));
+                }
             }
+
+            ProductOffer offer = productOfferService.createOfferForProducts(merchant, products, discountPercentage, startDate, endDate);
+
+            for (Product product : products) {
+                double discounted = productOfferService.getDiscountedPrice(product);
+                product.setDiscountedPrice(discounted);
+                productService.saveProduct(product);
+            }
+
+            return ResponseEntity.ok(new ApiResponse(true, "Offer created successfully", offer));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to create offer: " + ex.getMessage(), null));
         }
-
-        ProductOffer offer = productOfferService.createOfferForProducts(merchant, products, discountPercentage, startDate, endDate);
-
-        for (Product product : products) {
-            double discounted = productOfferService.getDiscountedPrice(product);
-            product.setDiscountedPrice(discounted);
-            productService.saveProduct(product);
-        }
-
-        return ResponseEntity.ok(new ApiResponse(true, "Offer created successfully", offer));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse> getAllOffers() {
-        List<ProductOffer> offers = productOfferService.getAllOffers();
-        return ResponseEntity.ok(new ApiResponse(true, "Offers fetched successfully", offers));
+        try {
+            List<ProductOffer> offers = productOfferService.getAllOffers();
+            return ResponseEntity.ok(new ApiResponse(true, "Offers fetched successfully", offers));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to fetch offers: " + ex.getMessage(), null));
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -68,10 +78,14 @@ public class ProductOfferController {
     public ResponseEntity<ApiResponse> deleteOffer(
             @PathVariable Long id,
             @RequestHeader("Authorization") String token) {
-
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        User merchant = userService.getUserByUsername(username);
-        productOfferService.deleteOffer(id, merchant);
-        return ResponseEntity.ok(new ApiResponse(true, "Offer deleted successfully", null));
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            User merchant = userService.getUserByUsername(username);
+            productOfferService.deleteOffer(id, merchant);
+            return ResponseEntity.ok(new ApiResponse(true, "Offer deleted successfully", null));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to delete offer: " + ex.getMessage(), null));
+        }
     }
 }

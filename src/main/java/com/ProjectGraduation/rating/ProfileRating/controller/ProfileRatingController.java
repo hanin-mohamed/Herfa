@@ -25,24 +25,38 @@ public class ProfileRatingController {
                                                 @PathVariable Long ratedUserId,
                                                 @RequestParam int stars,
                                                 @RequestParam(required = false) String comment) {
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            Long raterId = userService.getUserByUsername(username).getId();
 
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        Long raterId = userService.getUserByUsername(username).getId();
+            profileRatingService.rateUser(raterId, ratedUserId, stars, comment);
 
-        profileRatingService.rateUser(raterId, ratedUserId, stars, comment);
-
-        return ResponseEntity.ok(new ApiResponse(true, "Rating submitted successfully!", null));
+            return ResponseEntity.ok(new ApiResponse(true, "Rating submitted successfully!", null));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to submit rating: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping("/average/{ratedUserId}")
     public ResponseEntity<ApiResponse> getAverageRating(@PathVariable Long ratedUserId) {
-        double avgRating = profileRatingService.getAverageRating(ratedUserId);
-        return ResponseEntity.ok(new ApiResponse(true, "Average rating fetched successfully!", avgRating));
+        try {
+            double avgRating = profileRatingService.getAverageRating(ratedUserId);
+            return ResponseEntity.ok(new ApiResponse(true, "Average rating fetched successfully!", avgRating));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to fetch average rating: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping("/all/{ratedUserId}")
     public ResponseEntity<ApiResponse> getAllRatingsForUser(@PathVariable Long ratedUserId) {
-        List<ProfileRatingDTO> ratings = profileRatingService.getAllRatings(ratedUserId);
-        return ResponseEntity.ok(new ApiResponse(true, "All ratings fetched successfully!", ratings));
+        try {
+            List<ProfileRatingDTO> ratings = profileRatingService.getAllRatings(ratedUserId);
+            return ResponseEntity.ok(new ApiResponse(true, "All ratings fetched successfully!", ratings));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to fetch ratings: " + ex.getMessage(), null));
+        }
     }
 }

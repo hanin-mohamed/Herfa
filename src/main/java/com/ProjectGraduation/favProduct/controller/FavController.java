@@ -25,11 +25,11 @@ public class FavController {
             service.favProduct(productId, token);
             return ResponseEntity.ok(new ApiResponse(true, "Product added to favourites successfully!", null));
         } catch (IllegalStateException ex) {
-            return ResponseEntity.status(401)
+            return ResponseEntity.status(403)
                     .body(new ApiResponse(false, "Unauthorized: " + ex.getMessage(), null));
         } catch (Exception ex) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, "Error: " + ex.getMessage(), null));
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to add product to favourites: " + ex.getMessage(), null));
         }
     }
 
@@ -41,18 +41,24 @@ public class FavController {
             service.UnFavProduct(productId, token);
             return ResponseEntity.ok(new ApiResponse(true, "Product removed from favourites!", null));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(401)
+            return ResponseEntity.status(403)
                     .body(new ApiResponse(false, "Unauthorized: " + e.getMessage(), null));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, "Error: " + e.getMessage(), null));
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to remove product from favourites: " + e.getMessage(), null));
         }
     }
 
     @GetMapping("/{productId}")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getUsersByFavProduct(@PathVariable Long productId) {
-        List<User> users = service.getUsersByFavProduct(productId);
-        return ResponseEntity.ok(new ApiResponse(true, "Users who favorited this product fetched successfully!", users));
+        try {
+            List<User> users = service.getUsersByFavProduct(productId);
+            return ResponseEntity.ok(new ApiResponse(true, "Users who favorited this product fetched successfully!", users));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to fetch users: " + ex.getMessage(), null));
+        }
     }
 }
+

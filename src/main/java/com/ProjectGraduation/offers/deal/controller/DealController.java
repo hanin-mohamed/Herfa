@@ -12,7 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
 @RequestMapping("/deals")
 @RequiredArgsConstructor
@@ -26,25 +25,40 @@ public class DealController {
     public ResponseEntity<ApiResponse> createDeal(
             @RequestBody DealRequest request,
             @RequestHeader("Authorization") String token) {
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        Deal deal = dealService.createDeal(request, username);
-        return ResponseEntity.ok(new ApiResponse(true, "Deal created successfully", deal));
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            Deal deal = dealService.createDeal(request, username);
+            return ResponseEntity.ok(new ApiResponse(true, "Deal created successfully", deal));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to create deal: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping("/buyer")
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> getBuyerDeals(@RequestHeader("Authorization") String token) {
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        List<Deal> deals = dealService.getDealsForBuyer(username);
-        return ResponseEntity.ok(new ApiResponse(true, "Buyer deals retrieved", deals));
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            List<Deal> deals = dealService.getDealsForBuyer(username);
+            return ResponseEntity.ok(new ApiResponse(true, "Buyer deals retrieved", deals));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to retrieve buyer deals: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping("/seller")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getSellerDeals(@RequestHeader("Authorization") String token) {
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        List<Deal> deals = dealService.getDealsForSeller(username);
-        return ResponseEntity.ok(new ApiResponse(true, "Seller deals retrieved", deals));
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            List<Deal> deals = dealService.getDealsForSeller(username);
+            return ResponseEntity.ok(new ApiResponse(true, "Seller deals retrieved", deals));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to retrieve seller deals: " + ex.getMessage(), null));
+        }
     }
 
     @PatchMapping("/{id}/status")
@@ -53,9 +67,14 @@ public class DealController {
             @PathVariable Long id,
             @RequestParam DealStatus status,
             @RequestHeader("Authorization") String token) {
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        Deal updated = dealService.updateDealStatus(id, status, username);
-        return ResponseEntity.ok(new ApiResponse(true, "Deal status updated", updated));
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            Deal updated = dealService.updateDealStatus(id, status, username);
+            return ResponseEntity.ok(new ApiResponse(true, "Deal status updated", updated));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to update deal status: " + ex.getMessage(), null));
+        }
     }
 
     @PatchMapping("/{id}/counter")
@@ -64,9 +83,14 @@ public class DealController {
             @PathVariable Long id,
             @RequestParam double price,
             @RequestHeader("Authorization") String token) {
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        Deal updated = dealService.proposeCounterPrice(id, price, username);
-        return ResponseEntity.ok(new ApiResponse(true, "Counter price proposed", updated));
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            Deal updated = dealService.proposeCounterPrice(id, price, username);
+            return ResponseEntity.ok(new ApiResponse(true, "Counter price proposed", updated));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to propose counter price: " + ex.getMessage(), null));
+        }
     }
 
     @PatchMapping("/{id}/accept")
@@ -74,8 +98,13 @@ public class DealController {
     public ResponseEntity<ApiResponse> acceptCounterPrice(
             @PathVariable Long id,
             @RequestHeader("Authorization") String token) {
-        String username = jwtService.getUsername(token.replace("Bearer ", ""));
-        Deal updated = dealService.acceptCounterPrice(id, username);
-        return ResponseEntity.ok(new ApiResponse(true, "Counter price accepted", updated));
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            Deal updated = dealService.acceptCounterPrice(id, username);
+            return ResponseEntity.ok(new ApiResponse(true, "Counter price accepted", updated));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to accept counter price: " + ex.getMessage(), null));
+        }
     }
 }

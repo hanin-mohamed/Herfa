@@ -27,18 +27,31 @@ public class CommentController {
     public ResponseEntity<ApiResponse> addComment(@RequestHeader("Authorization") String token,
                                                   @RequestParam Long productId,
                                                   @RequestParam String content) {
-        String userName = jwtService.getUsername(token.replace("Bearer ", ""));
-        User user = repo.findByUsernameIgnoreCase(userName)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            String userName = jwtService.getUsername(token.replace("Bearer ", ""));
+            User user = repo.findByUsernameIgnoreCase(userName)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Comment comment = commentService.addComment(user.getId(), productId, content);
-        return ResponseEntity.ok(new ApiResponse(true, "Comment added successfully!", comment));
+            Comment comment = commentService.addComment(user.getId(), productId, content);
+            return ResponseEntity.ok(new ApiResponse(true, "Comment added successfully!", comment));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(404)
+                    .body(new ApiResponse(false, "User not found: " + ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to add comment: " + ex.getMessage(), null));
+        }
     }
 
     @GetMapping("/{productId}")
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> getCommentsByProduct(@PathVariable Long productId) {
-        List<Comment> comments = commentService.getCommentByProductId(productId);
-        return ResponseEntity.ok(new ApiResponse(true, "Comments fetched successfully!", comments));
+        try {
+            List<Comment> comments = commentService.getCommentByProductId(productId);
+            return ResponseEntity.ok(new ApiResponse(true, "Comments fetched successfully!", comments));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to fetch comments: " + ex.getMessage(), null));
+        }
     }
 }
