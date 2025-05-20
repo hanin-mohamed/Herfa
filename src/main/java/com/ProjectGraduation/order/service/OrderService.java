@@ -121,14 +121,21 @@ public class OrderService {
         for (ProductOfferUsageRecord usage : productOfferUsages) {
             productOfferService.recordOfferUsage(usage.offer, user, order, usage.discount);
         }
-
-        int pointsEarned = (int) (total / 10);
-        user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsEarned);
-        userRepository.save(user);
-
         return mapToOrderResponse(order);
     }
 
+    public void confirmOrderPayment(Long orderId) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        if (order.getStatus() == OrderStatus.PAID) return;
+        order.setStatus(OrderStatus.PAID);
+        User user = order.getUser();
+        int pointsEarned = (int) (order.getTotalPrice() / 100);
+        user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsEarned);
+        userRepository.save(user);
+        orderRepo.save(order);
+
+    }
 
     private OrderResponse mapToOrderResponse(Order order) {
         List<OrderItemDTO> items = order.getOrderDetails().stream().map(detail -> {
@@ -143,6 +150,7 @@ public class OrderService {
                             .name(product.getName())
                             .shortDescription(product.getShortDescription())
                             .longDescription(product.getLongDescription())
+                            .discountedPrice(productService.getEffectivePrice(product))
                             .price(product.getPrice())
                             .quantity(product.getQuantity())
                             .active(product.getActive())
@@ -168,24 +176,22 @@ public class OrderService {
     private double applyAllOffers(Product product, int quantity, String couponCode, User user, Order order,
                                   List<String> appliedOffers, List<CouponUsageRecord> couponUsages,
                                   List<ProductOfferUsageRecord> productOfferUsages) {
-        double unitPrice = product.getPrice();
-        Long categoryId = product.getCategory() != null ? product.getCategory().getId() : null;
 
-        // Step 1: Apply Product Offer
-        double discountedUnitPrice = applyProductOffer(product, quantity, categoryId, appliedOffers, productOfferUsages);
-        product.setDiscountedPrice(discountedUnitPrice);
-        double subtotal = discountedUnitPrice * quantity;
+        // 1. Apply Product Offer
+        double unitPrice = applyProductOffer(product, quantity, product.getCategory() != null ? product.getCategory().getId() : null,
+                appliedOffers, productOfferUsages);
 
-        // Step 2: Apply Coupon
+        // 2. Apply Coupon
         double couponDiscount = applyCoupon(product, quantity, couponCode, user, order, couponUsages, appliedOffers);
-        subtotal = max(subtotal - couponDiscount, 0);
+        double subtotal = Math.max(unitPrice * quantity - couponDiscount, 0);
 
-        // Step 3: Apply Best Auto Offer
-        double autoDiscount = applyBestAutoOffer(product, quantity, subtotal, user, order, categoryId, appliedOffers);
-        subtotal = max(subtotal - autoDiscount, 0);
+        // 3. Apply Best Auto Offer
+        double autoDiscount = applyBestAutoOffer(product, quantity, subtotal, user, order,
+                product.getCategory() != null ? product.getCategory().getId() : null, appliedOffers);
 
-        return subtotal;
+        return Math.max(subtotal - autoDiscount, 0);
     }
+
 
     private double applyProductOffer(Product product, int quantity, Long categoryId,
                                      List<String> appliedOffers, List<ProductOfferUsageRecord> usageRecords) {

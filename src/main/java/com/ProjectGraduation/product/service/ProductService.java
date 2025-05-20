@@ -89,21 +89,32 @@ public class ProductService {
         return productRepository.save(existingProduct);
     }
 
-    public List<Product> getAllActiveProduct() {
-        return productRepository.findActiveProducts(true);
+    public List<Product> getAllActiveProducts() {
+        List<Product> products = productRepository.findActiveProducts(true);
+        for (Product p : products) {
+            p.setDiscountedPrice(getEffectivePrice(p));
+        }
+        return products;
     }
 
-    public List<Product> getAllProduct() {
+
+    public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
     public Product getById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
+        double discounted = getEffectivePrice(product);
+        product.setDiscountedPrice(discounted);
 
-        double discountedPrice = productOfferService.getDiscountedPrice(product);
-        product.setDiscountedPrice(discountedPrice);
         return product;
+    }
+    public double getEffectivePrice(Product product) {
+        return productOfferService.getProductOffer(product.getId(),
+                        product.getCategory() != null ? product.getCategory().getId() : null)
+                .map(offer -> productOfferService.getDiscountedPrice(product))
+                .orElse(product.getPrice());
     }
 
     public void deleteById(Long productId) throws Exception {
@@ -114,8 +125,13 @@ public class ProductService {
     }
 
     public List<Product> getProductsByIds(List<Long> ids) {
-        return productRepository.findAllById(ids);
+        List<Product> products = productRepository.findAllById(ids);
+        for (Product p : products) {
+            p.setDiscountedPrice(getEffectivePrice(p));
+        }
+        return products;
     }
+
     public void saveProduct(Product product) {
         productRepository.save(product);
     }

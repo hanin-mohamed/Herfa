@@ -10,8 +10,6 @@ import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.category.service.CategoryService;
 import com.ProjectGraduation.product.service.ProductService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,9 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +119,7 @@ public class ProductController {
     @GetMapping("/active")
     public ResponseEntity<ApiResponse> getAllActiveProduct() {
         try {
-            List<Product> products = productService.getAllActiveProduct();
+            List<Product> products = productService.getAllActiveProducts();
             return ResponseEntity.ok(new ApiResponse(true, "Active products retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -135,7 +131,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getAllProduct() {
         try {
-            List<Product> products = productService.getAllProduct();
+            List<Product> products = productService.getAllProducts();
             return ResponseEntity.ok(new ApiResponse(true, "All products retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

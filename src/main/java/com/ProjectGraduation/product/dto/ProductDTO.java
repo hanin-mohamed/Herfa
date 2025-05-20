@@ -49,4 +49,7 @@ public class ProductDTO {
 
     @NotNull(message = "Image file is required")
     private MultipartFile file;
+    private Double discountedPrice;
+
+
 }

@@ -4,6 +4,7 @@ import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.repository.OrderRepository;
+import com.ProjectGraduation.order.service.OrderService;
 import com.ProjectGraduation.order.utils.OrderStatus;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class WebhookController {
 
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
     private final UserRepository userRepository;
 
 //    private final String endpointSecret = Dotenv.load().get("STRIPE_WEBHOOK_SECRET");
@@ -65,15 +66,8 @@ public class WebhookController {
 
                 // pay for order
                 if (metadata != null && metadata.has("orderId")) {
-                    String orderId = metadata.get("orderId").getAsString();
-
-                    Order order = orderRepository.findById(Long.parseLong(orderId))
-                            .orElseThrow(() -> new RuntimeException("Order not found"));
-
-                    order.setStatus(OrderStatus.PAID);
-                    orderRepository.save(order);
-
-                    System.out.println("Order " + orderId + " marked as PAID");
+                    Long orderId = Long.parseLong(metadata.get("orderId").getAsString());
+                    orderService.confirmOrderPayment(orderId);
                     return ResponseEntity.ok("Order payment completed");
                 }
 
