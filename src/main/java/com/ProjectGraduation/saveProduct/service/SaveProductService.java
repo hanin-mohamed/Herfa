@@ -29,6 +29,7 @@ public class SaveProductService {
         String userUserName = jwtService.getUsername(token.replace("Bearer " , ""));
         User user = getUserByUsername(userUserName) ;
 
+
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NoSuchElementException("Product not found with ID: " + productId));
 
@@ -65,7 +66,6 @@ public class SaveProductService {
 
         User user = getUserByUsername(userUserName);
 
-        // Return the list of saved products
         return user.getSavedProducts();
     }
 

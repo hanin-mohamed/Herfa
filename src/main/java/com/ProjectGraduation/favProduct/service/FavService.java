@@ -1,6 +1,8 @@
 package com.ProjectGraduation.favProduct.service;
 
+import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.product.entity.Product;
@@ -28,8 +30,10 @@ public class FavService {
         String userUserName =
                 jwtService.getUsername(token.replace("Bearer " , ""));
         User user = getUserByUserName(userUserName) ;
+
         Product product = repo.findById(productId)
                 .orElseThrow(()->new  NoSuchElementException("Product Not Found With Id "+productId));
+
         if (user.getFavProducts().contains(product)){
             throw new IllegalArgumentException("Product Is Already Fav By This User");
         }
@@ -44,6 +48,7 @@ public class FavService {
         String userUserName =
                 jwtService.getUsername(token.replace("Bearer ",""));
         User user = getUserByUserName(userUserName) ;
+
         Product product = repo.findById(productId)
                 .orElseThrow(()->new NoSuchElementException("Product Not Found"));
         if (!user.getFavProducts().contains(product)){
@@ -54,11 +59,11 @@ public class FavService {
 
     }
 
-    public User getUserByUserName(String username){
-        return userRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(()->new RuntimeException("User Not Found")) ;
-    }
 
+    public User getUserByUserName(String username) {
+        return userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
+    }
     public List<User> getUsersByFavProduct(Long productId) {
         return userRepository.findUsersByFavProduct(productId);
     }

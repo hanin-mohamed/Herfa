@@ -18,7 +18,7 @@ public class FavController {
     private final FavService service;
 
     @PostMapping("/{productId}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> saveFavProduct(@PathVariable Long productId,
                                                       @RequestHeader("Authorization") String token) {
         try {
@@ -34,7 +34,7 @@ public class FavController {
     }
 
     @DeleteMapping("/{productId}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> unFavProduct(@PathVariable Long productId,
                                                     @RequestHeader("Authorization") String token) {
         try {
@@ -50,7 +50,7 @@ public class FavController {
     }
 
     @GetMapping("/{productId}")
-    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
+//    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getUsersByFavProduct(@PathVariable Long productId) {
         try {
             List<User> users = service.getUsersByFavProduct(productId);

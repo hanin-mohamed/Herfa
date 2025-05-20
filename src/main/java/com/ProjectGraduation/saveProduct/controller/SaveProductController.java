@@ -18,7 +18,7 @@ public class SaveProductController {
     private final SaveProductService saveService;
 
     @PostMapping("/{productId}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> saveProduct(@PathVariable Long productId,
                                                    @RequestHeader("Authorization") String token) {
         try {
@@ -32,7 +32,7 @@ public class SaveProductController {
     }
 
     @DeleteMapping("/{productId}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> unSaveProduct(@PathVariable Long productId,
                                                      @RequestHeader("Authorization") String token) {
         try {
@@ -46,7 +46,7 @@ public class SaveProductController {
     }
 
     @GetMapping("")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+//    @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> getAllSavedProducts(@RequestHeader("Authorization") String token) {
         List<Product> savedProducts = saveService.getAllSavedProducts(token);
         return ResponseEntity.ok(new ApiResponse(true, "Saved products fetched successfully", savedProducts));
