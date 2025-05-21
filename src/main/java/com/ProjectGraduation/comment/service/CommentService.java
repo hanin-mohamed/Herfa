@@ -88,4 +88,23 @@ public class CommentService {
 
         repo.deleteByProductId(productId);
     }
+
+    @Transactional
+    public Comment updateComment(Long commentId, String token, String newContent) {
+        String username = jwtService.getUsername(token.replace("Bearer ", ""));
+        User requestingUser = userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Comment comment = repo.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found"));
+
+        if (!comment.getUser().getId().equals(requestingUser.getId())) {
+            throw new UnauthorizedCommentDeletionException(
+                    "You are not authorized to update this comment");
+        }
+
+            comment.setContent(newContent);
+            return repo.save(comment);
+
+    }
 }

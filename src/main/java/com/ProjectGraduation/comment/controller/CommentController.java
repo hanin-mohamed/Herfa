@@ -83,4 +83,26 @@ public class CommentController {
                     .body(new ApiResponse(false, ex.getMessage(), null));
         }
     }
+
+
+    @PutMapping("/{commentId}")
+    public ResponseEntity<ApiResponse> updateComment(
+            @PathVariable Long commentId ,
+            @RequestHeader("Authorization") String token,
+            @RequestParam String newContent) {
+
+        try {
+            Comment updatedComment = commentService.updateComment(commentId, token, newContent);
+            return ResponseEntity.ok(
+                    new ApiResponse(true, "Comment updated successfully", updatedComment));
+        } catch (CommentNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ApiResponse(false, ex.getMessage(), null)
+            );
+        } catch (UnauthorizedCommentDeletionException ex) {
+            return ResponseEntity.status(403)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        }
+    }
+
 }

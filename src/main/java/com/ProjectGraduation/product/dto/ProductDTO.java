@@ -47,7 +47,7 @@ public class ProductDTO {
     @Size(min = 1, message = "At least one color must be specified")
     private List<String> colors;
 
-    @NotEmpty(message = "Image file is required")
+    @NotNull(message = "File must be provided")
     private MultipartFile file;
 
     private Double discountedPrice;
