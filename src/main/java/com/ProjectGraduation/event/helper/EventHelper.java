@@ -29,8 +29,7 @@ public class EventHelper {
         User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("Merchant not found with username: " + username));
 
-        // تحقق إضافي من وجود التاجر في جدول merchant
-        if (!userRepository.existsById(user.getId())) {
+         if (!userRepository.existsById(user.getId())) {
             throw new UserNotFoundException("Merchant ID " + user.getId() + " not found in merchant table");
         }
 
