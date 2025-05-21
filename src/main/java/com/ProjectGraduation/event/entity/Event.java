@@ -1,11 +1,10 @@
 package com.ProjectGraduation.event.entity;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.comment.entity.Comment;
+import com.ProjectGraduation.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -17,6 +16,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 public class Event {
 
     @Id
@@ -42,6 +42,18 @@ public class Event {
     )
     private Set<User> interestedUsers = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "event_products",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private Set<Product> products = new HashSet<>();
+
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<>();
+
     public void addInterestedUser(User user) {
         interestedUsers.add(user);
     }
@@ -49,4 +61,23 @@ public class Event {
     public void removeInterestedUser(User user) {
         interestedUsers.remove(user);
     }
+
+    public void addProduct(Product product) {
+        products.add(product);
+        product.getEvents().add(this);
+    }
+
+    public void removeProduct(Product product) {
+        products.remove(product);
+        product.getEvents().remove(this);
+    }
+    public void addComment(Comment comment) {
+        comments.add(comment);
+        comment.setEvent(this);
+    }
+    public void removeComment(Comment comment) {
+        comments.remove(comment);
+        comment.setEvent(null);
+    }
+
 }

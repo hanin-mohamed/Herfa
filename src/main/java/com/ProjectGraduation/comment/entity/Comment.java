@@ -1,6 +1,7 @@
 package com.ProjectGraduation.comment.entity;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.event.entity.Event;
 import com.ProjectGraduation.product.entity.Product;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -33,9 +34,14 @@ public class Comment {
     private User user;
 
     @ManyToOne()
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id")
     @JsonIgnore
     private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    @JsonIgnore
+    private Event event;
 
     public Comment(String content, User user, Product product) {
         this.content = content;

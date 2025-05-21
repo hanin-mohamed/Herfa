@@ -3,6 +3,7 @@ package com.ProjectGraduation.product.entity;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.category.entity.Category;
 import com.ProjectGraduation.comment.entity.Comment;
+import com.ProjectGraduation.event.entity.Event;
 import com.ProjectGraduation.order.entity.OrderDetails;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -63,6 +64,12 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
+
+
+    @ManyToMany(mappedBy = "products", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<Event> events = new HashSet<>();
+
 
     @ElementCollection
     @CollectionTable(name = "product_colors", joinColumns = @JoinColumn(name = "product_id"))
