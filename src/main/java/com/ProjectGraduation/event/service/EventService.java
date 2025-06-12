@@ -198,8 +198,14 @@ public class EventService {
         if (!comment.getUser().getId().equals(user.getId())) {
             throw new UnauthorizedAccessException("You can only delete your own comments");
         }
-
         event.removeComment(comment);
         eventRepository.save(event);
     }
+
+    public List<Comment> getComments(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
+        return new ArrayList<>(event.getComments());
+    }
+
 }
