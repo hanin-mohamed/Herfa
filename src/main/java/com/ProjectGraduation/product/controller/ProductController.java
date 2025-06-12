@@ -197,4 +197,10 @@ public class ProductController {
         return ResponseEntity.ok(productService.filterByPriceRange(min, max));
     }
 
+    @GetMapping("/merchant/{id}")
+    public ResponseEntity<List<Product>> getMerchantById(@PathVariable Long id) {
+        User user = userService.getUserByID(id);
+        return ResponseEntity.ok(productService.getMerchantProducts(user)) ;
+    }
+
 }

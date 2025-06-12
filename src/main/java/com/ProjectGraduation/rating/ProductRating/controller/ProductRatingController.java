@@ -10,15 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/ratings")
 @RequiredArgsConstructor
 public class ProductRatingController {
 
     private final ProductRatingService service;
-    private final JWTService jwtService;
-    private final UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_USER')")
@@ -27,19 +24,22 @@ public class ProductRatingController {
             @RequestParam Long productId,
             @RequestParam int stars
     ) {
-        String userName = jwtService.getUsername(token.replace("Bearer ", ""));
-        User user = userRepository.findByUsernameIgnoreCase(userName)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
-
-        Long userId = user.getId();
-        ProductRating productRating = service.addOrUpdateRating(userId, productId, stars);
-        return ResponseEntity.ok(new ApiResponse(true, "Rating submitted successfully", productRating));
+        try {
+            ProductRating productRating = service.addOrUpdateRating(token, productId, stars);
+            return ResponseEntity.ok(new ApiResponse(true, "Rating submitted successfully", productRating));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage(), null));
+        }
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> getProductAverageRating(@RequestParam Long productId) {
-        double averageRating = service.getAverageRating(productId);
-        return ResponseEntity.ok(new ApiResponse(true, "Average rating fetched successfully", averageRating));
+        try {
+            double averageRating = service.getAverageRating(productId);
+            return ResponseEntity.ok(new ApiResponse(true, "Average rating fetched successfully", averageRating));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, ex.getMessage(), null));
+        }
     }
 }

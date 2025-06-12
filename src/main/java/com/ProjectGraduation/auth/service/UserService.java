@@ -63,4 +63,10 @@ public class UserService {
         return userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found with username: " + username));
     }
+
+    public User getUserByID(Long id) {
+        return userRepository.findUserById(id);
+    }
+
+
 }
