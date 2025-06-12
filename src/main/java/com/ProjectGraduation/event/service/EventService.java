@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class EventService {
     public Event createEvent(String token, EventDto eventDto, MultipartFile file) throws IOException {
         try {
             System.out.println("Starting event creation...");
-            User user = eventHelper.validateMerchant(token);
+            User user = eventHelper.getUserFromToken(token);
             System.out.println("Validated merchant with ID: " + user.getId());
 
             String uploadedFileName = eventHelper.uploadEventMedia(file, user.getId());
@@ -167,6 +168,22 @@ public class EventService {
 
         event.addComment(comment);
         return eventRepository.save(event);
+    }
+    @Transactional
+    public Event updateComment(Long eventId,long commentId , String token, String commentText) {
+
+        User user = eventHelper.getUserFromToken(token);
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
+        Comment comment =  commentRepo.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found"));
+        if (!comment.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedAccessException("You can only update your own comments");
+        }
+        comment.setContent(commentText);
+        comment.setUpdatedAt(LocalDateTime.now());
+        return eventRepository.save(event);
+
     }
 
     @Transactional

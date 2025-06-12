@@ -1,5 +1,6 @@
 package com.ProjectGraduation.event.controller;
 
+import com.ProjectGraduation.comment.exception.CommentNotFoundException;
 import com.ProjectGraduation.event.dto.EventDto;
 import com.ProjectGraduation.event.entity.Event;
 import com.ProjectGraduation.event.exception.AlreadyInterestedException;
@@ -158,6 +159,35 @@ public class EventController {
             return ResponseEntity.ok(new ApiResponse(true, "Comment added to event", event));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/{eventId}/comments/{commentId}")
+    public ResponseEntity<ApiResponse> updateComment(
+            @PathVariable Long eventId,
+            @PathVariable Long commentId,
+            @RequestHeader("Authorization") String token,
+            @RequestParam String commentText) {
+
+        try {
+            Event updatedEvent = eventService.updateComment(
+                    eventId,
+                    commentId,
+                    token.replace("Bearer ", ""),
+                   commentText
+            );
+            return ResponseEntity.ok(
+                    new ApiResponse(true, "Comment updated successfully", updatedEvent)
+            );
+        } catch (EventNotFoundException | CommentNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (UnauthorizedAccessException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to update comment", null));
         }
     }
 

@@ -48,4 +48,15 @@ public class Comment {
         this.user = user;
         this.product = product;
     }
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // Add to your existing Comment entity
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
 }
