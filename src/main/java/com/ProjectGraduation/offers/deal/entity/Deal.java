@@ -30,6 +30,7 @@ public class Deal {
     private Product product;
     private int requestedQuantity;
     private double proposedPrice;
+    private Integer counterQuantity;
     private Double counterPrice; // if seller proposes another price
     @Enumerated(EnumType.STRING)
     private DealStatus status;

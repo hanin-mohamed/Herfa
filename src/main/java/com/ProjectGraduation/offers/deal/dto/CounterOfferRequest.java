@@ -7,4 +7,5 @@ import lombok.Data;
 public class CounterOfferRequest {
     private Long dealId;
     private double counterPrice;
+    private int counterQuantity;
 }
