@@ -27,7 +27,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    @JsonIgnore
+//    @JsonIgnore
     private Long id;
 
     @Column(name = "username", nullable = false, unique = true)
