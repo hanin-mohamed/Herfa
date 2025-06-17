@@ -208,4 +208,15 @@ public class EventService {
         return new ArrayList<>(event.getComments());
     }
 
+    @Transactional
+    public List<Event> getUserInterestedEvents(String token) {
+        User user = eventHelper.getUserFromToken(token);
+
+        List<Event> events = eventRepository.findEventsByInterestedUserId(user.getId());
+        if (events.isEmpty()) {
+            throw new EventNotFoundException("No events found for the user with ID: " + user.getId());
+        }
+        return events;
+    }
+
 }

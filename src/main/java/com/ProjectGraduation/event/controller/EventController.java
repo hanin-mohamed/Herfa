@@ -218,4 +218,20 @@ public class EventController {
         }
     }
 
+    @GetMapping("/user/interested")
+    public ResponseEntity<ApiResponse> getUserInterestedEvents(
+            @RequestHeader("Authorization") String token
+    ) {
+        try {
+            List<Event> events = eventService.getUserInterestedEvents(token);
+            return ResponseEntity.ok(new ApiResponse(true, "Interested events fetched successfully", events));
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to fetch interested events", null));
+        }
+    }
+
 }
