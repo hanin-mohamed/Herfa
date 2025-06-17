@@ -46,7 +46,7 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @JsonIgnore
+//    @JsonIgnore
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
