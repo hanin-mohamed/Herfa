@@ -115,4 +115,18 @@ public class AuthenticationController {
                     .body(new ApiResponse(false, "Failed to resend OTP: " + ex.getMessage(), null));
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse> getCurrentUser(@RequestHeader("Authorization") String token) {
+        try {
+            User user = userService.getUserByToken(token);
+            return ResponseEntity.ok(new ApiResponse(true, "User retrieved successfully.", user));
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "An unexpected error occurred: " + ex.getMessage(), null));
+        }
+    }
 }

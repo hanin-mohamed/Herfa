@@ -68,5 +68,11 @@ public class UserService {
         return userRepository.findUserById(id);
     }
 
+    public User getUserByToken(String token) {
+        String username = jwtService.getUsername(token);
+        return userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found with token: " + token));
+    }
+
 
 }
