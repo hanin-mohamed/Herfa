@@ -128,7 +128,7 @@ public class DealController {
         }
     }
 
-    @PatchMapping("/{id}/accept")
+    @PatchMapping("/{id}/buyer/accept")
     @PreAuthorize("hasAuthority('ROLE_USER')")
     public ResponseEntity<ApiResponse> acceptCounterPrice(
             @PathVariable Long id,

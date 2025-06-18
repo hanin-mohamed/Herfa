@@ -14,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +29,12 @@ public class BundleService {
 
     @Transactional
     public BundleResponse createBundle(BundleRequest request, User merchant) {
+        Set<Long> productIds = new HashSet<>();
+        for (var item : request.getProducts()) {
+            if (!productIds.add(item.getProductId())) {
+                throw new RuntimeException("Duplicate product in bundle");
+            }
+        }
         Bundle bundle = new Bundle();
         bundle.setName(request.getName());
         bundle.setDescription(request.getDescription());
