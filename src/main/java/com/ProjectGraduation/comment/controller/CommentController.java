@@ -1,5 +1,6 @@
 package com.ProjectGraduation.comment.controller;
 
+import com.ProjectGraduation.comment.dto.CommentResponse;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.exception.CommentNotFoundException;
 import com.ProjectGraduation.comment.exception.UnauthorizedCommentDeletionException;
@@ -29,13 +30,15 @@ public class CommentController {
             @RequestParam String content) {
         try {
             Comment comment = commentService.addComment(token, productId, content);
+            CommentResponse response = commentService.convertToCommentResponse(comment);
             return ResponseEntity.ok(
-                    new ApiResponse(true, "Comment added successfully", comment));
+                    new ApiResponse(true, "Comment added successfully", response));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, ex.getMessage(), null));
         }
     }
+
 
     @GetMapping("/product/{productId}")
     public ResponseEntity<ApiResponse> getCommentsByProduct(
@@ -87,12 +90,11 @@ public class CommentController {
 
     @PutMapping("/{commentId}")
     public ResponseEntity<ApiResponse> updateComment(
-            @PathVariable Long commentId ,
+            @PathVariable Long commentId,
             @RequestHeader("Authorization") String token,
             @RequestParam String newContent) {
-
         try {
-            Comment updatedComment = commentService.updateComment(commentId, token, newContent);
+            CommentResponse updatedComment = commentService.updateComment(commentId, token, newContent);
             return ResponseEntity.ok(
                     new ApiResponse(true, "Comment updated successfully", updatedComment));
         } catch (CommentNotFoundException ex) {

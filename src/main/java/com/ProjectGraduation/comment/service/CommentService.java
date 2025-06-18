@@ -3,6 +3,7 @@ package com.ProjectGraduation.comment.service;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
+import com.ProjectGraduation.comment.dto.CommentResponse;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.exception.CommentNotFoundException;
 import com.ProjectGraduation.comment.exception.UnauthorizedCommentDeletionException;
@@ -40,13 +41,27 @@ public class CommentService {
         return repo.save(comment);
     }
 
-    public List<Comment> getCommentByProductId(Long productId){
+    public List<CommentResponse> getCommentByProductId(Long productId){
         Optional<Product>productOptional = productRepository.findById(productId);
 
         if (productOptional.isEmpty()){
             throw new RuntimeException("Product not Found") ;
         }
-        return repo.findByProduct(productOptional.get()) ;
+        return repo.findByProduct(productOptional.get()).stream()
+                .map(this::convertToCommentResponse).toList();
+    }
+
+    public CommentResponse convertToCommentResponse(Comment comment) {
+        return new CommentResponse(
+                comment.getId(),
+                comment.getContent(),
+                comment.getCreatedAt(),
+                comment.getUpdatedAt(),
+                comment.getUser().getFirstName(),
+                comment.getUser().getLastName(),
+                comment.getUser().getId(),
+                comment.getProduct().getId()
+        );
     }
 
     @Transactional
@@ -90,7 +105,7 @@ public class CommentService {
     }
 
     @Transactional
-    public Comment updateComment(Long commentId, String token, String newContent) {
+    public CommentResponse updateComment(Long commentId, String token, String newContent) {
         String username = jwtService.getUsername(token.replace("Bearer ", ""));
         User requestingUser = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -104,7 +119,8 @@ public class CommentService {
         }
 
             comment.setContent(newContent);
-            return repo.save(comment);
+            Comment updatedComment = repo.save(comment);
+            return convertToCommentResponse(updatedComment) ;
 
     }
 }
