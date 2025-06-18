@@ -1,3 +1,4 @@
+
 package com.ProjectGraduation.product.controller;
 
 import com.ProjectGraduation.common.ApiResponse;
@@ -6,6 +7,7 @@ import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.category.entity.Category;
 import com.ProjectGraduation.product.dto.ProductDTO;
+import com.ProjectGraduation.product.dto.ProductResponse;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.category.service.CategoryService;
@@ -119,7 +121,7 @@ public class ProductController {
     @GetMapping("/active")
     public ResponseEntity<ApiResponse> getAllActiveProduct() {
         try {
-            List<Product> products = productService.getAllActiveProducts();
+            List<ProductResponse> products = productService.getAllActiveProducts();
             return ResponseEntity.ok(new ApiResponse(true, "Active products retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -131,7 +133,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getAllProduct() {
         try {
-            List<Product> products = productService.getAllProducts();
+            List<ProductResponse> products = productService.getAllProducts();
             return ResponseEntity.ok(new ApiResponse(true, "All products retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -142,7 +144,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> getById(@PathVariable Long id) {
         try {
-            Product product = productService.getById(id);
+            ProductResponse product = productService.findById(id);
             return ResponseEntity.ok(new ApiResponse(true, "Product retrieved successfully", product));
         } catch (ProductNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -152,6 +154,7 @@ public class ProductController {
                     .body(new ApiResponse(false, "Failed to retrieve product: " + ex.getMessage(), null));
         }
     }
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
@@ -180,27 +183,31 @@ public class ProductController {
     @GetMapping("/filter/category/{categoryId}")
     public ResponseEntity<ApiResponse> filterByCategoryId(@PathVariable Long categoryId) {
         try {
-            List<Product> products = productService.filterByCategoryId(categoryId);
+            List<ProductResponse> products = productService.filterByCategoryId(categoryId);
             return ResponseEntity.ok(new ApiResponse(true, "Products by category retrieved successfully", products));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(false, "Failed to retrieve products by category: " + ex.getMessage(), null));
         }
     }
+
+
     @GetMapping("/filter/color")
-    public ResponseEntity<List<Product>> filterByColor(@RequestParam String color) {
+    public ResponseEntity<List<ProductResponse>> filterByColor(@RequestParam String color) {
         return ResponseEntity.ok(productService.filterByColor(color));
     }
+
     @GetMapping("/filter/price")
-    public ResponseEntity<List<Product>> filterByPrice(@RequestParam(required = false) Double min,
-                                                       @RequestParam(required = false) Double max) {
+    public ResponseEntity<List<ProductResponse>> filterByPrice(@RequestParam(required = false) Double min,
+                                                               @RequestParam(required = false) Double max) {
         return ResponseEntity.ok(productService.filterByPriceRange(min, max));
     }
 
+
     @GetMapping("/merchant/{id}")
-    public ResponseEntity<List<Product>> getMerchantById(@PathVariable Long id) {
+    public ResponseEntity<List<ProductResponse>> getMerchantById(@PathVariable Long id) {
         User user = userService.getUserByID(id);
-        return ResponseEntity.ok(productService.getMerchantProducts(user)) ;
+        return ResponseEntity.ok(productService.findMerchantProducts(user));
     }
 
 }

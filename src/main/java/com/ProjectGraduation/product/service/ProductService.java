@@ -3,6 +3,7 @@ package com.ProjectGraduation.product.service;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.file.CloudinaryService;
 import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
+import com.ProjectGraduation.product.dto.ProductResponse;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.product.repo.ProductRepository;
@@ -89,17 +90,33 @@ public class ProductService {
         return productRepository.save(existingProduct);
     }
 
-    public List<Product> getAllActiveProducts() {
+
+
+
+    public List<ProductResponse> getAllActiveProducts() {
         List<Product> products = productRepository.findActiveProducts(true);
         for (Product p : products) {
             p.setDiscountedPrice(getEffectivePrice(p));
         }
-        return products;
+        return products.stream()
+                .map(this:: convertToProductResponse)
+                .toList();
     }
 
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductResponse> getAllProducts() {
+        List<Product> products = productRepository.findAll();
+        return products.stream()
+                .map(this::convertToProductResponse)
+                .toList();
+    }
+
+    public ProductResponse findById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
+        double discounted = getEffectivePrice(product);
+        product.setDiscountedPrice(discounted);
+        return convertToProductResponse(product);
     }
 
     public Product getById(Long id) {
@@ -107,9 +124,10 @@ public class ProductService {
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + id));
         double discounted = getEffectivePrice(product);
         product.setDiscountedPrice(discounted);
-
         return product;
     }
+
+
     public double getEffectivePrice(Product product) {
         return productOfferService.getProductOffer(product.getId(),
                         product.getCategory() != null ? product.getCategory().getId() : null)
@@ -136,28 +154,74 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    public List<ProductResponse> findMerchantProducts(User user) {
+        List<Product> products = productRepository.findAllByUser(user);
+
+        return products.stream()
+                .map(this::convertToProductResponse)
+                .toList();
+    }
+
     public List<Product> getMerchantProducts(User user) {
-        return productRepository.findAllByUser(user);
-    }
-    public List<Product> filterByCategoryId(Long id) {
-        return productRepository.findByCategoryId(id);
+        List<Product> products = productRepository.findAllByUser(user);
+        return products ;
     }
 
-    public List<Product> filterByColor(String color) {
+
+    public List<ProductResponse> filterByCategoryId(Long id) {
+        List<Product> products = productRepository.findByCategoryId(id);
+        return products.stream()
+                .map(this::convertToProductResponse)
+                .toList();}
+
+
+    public List<ProductResponse> filterByColor(String color) {
         List<Product> all = productRepository.findActiveProducts(true);
-        if (color == null || color.isBlank()) return all;
-
+        if (color == null || color.isBlank()) {
+            return all.stream()
+                    .map(this::convertToProductResponse)
+                    .toList();
+        }
         return all.stream()
                 .filter(p -> p.getColors() != null &&
                         p.getColors().stream().anyMatch(c -> c.equalsIgnoreCase(color)))
+                .map(this::convertToProductResponse)
                 .toList();
     }
 
-    public List<Product> filterByPriceRange(Double min, Double max) {
+    public List<ProductResponse> filterByPriceRange(Double min, Double max) {
         return productRepository.findActiveProducts(true).stream()
                 .filter(p -> (min == null || p.getPrice() >= min) &&
                         (max == null || p.getPrice() <= max))
+                .map(this::convertToProductResponse)
                 .toList();
     }
 
+
+    public ProductResponse convertToProductResponse(Product product) {
+        ProductResponse response = new ProductResponse();
+        response.setId(product.getId());
+        response.setName(product.getName());
+        response.setShortDescription(product.getShortDescription());
+        response.setLongDescription(product.getLongDescription());
+        response.setPrice(product.getPrice());
+        response.setQuantity(product.getQuantity());
+        response.setMedia(product.getMedia());
+        response.setActive(product.getActive());
+        response.setColors(product.getColors());
+        response.setDiscountedPrice(getEffectivePrice(product));
+
+        if (product.getUser() != null) {
+            response.setUserUsername(product.getUser().getUsername());
+            response.setUserFirstName(product.getUser().getFirstName());
+            response.setUserLastName(product.getUser().getLastName());
+        }
+
+        if (product.getCategory() != null) {
+            response.setCategoryId(product.getCategory().getId());
+            response.setCategoryName(product.getCategory().getName());
+        }
+
+        return response;
+    }
 }
