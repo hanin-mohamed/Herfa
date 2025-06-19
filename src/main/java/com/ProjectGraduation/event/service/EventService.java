@@ -1,5 +1,6 @@
 package com.ProjectGraduation.event.service;
 
+import com.ProjectGraduation.comment.dto.CommentResponse;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.exception.CommentNotFoundException;
 import com.ProjectGraduation.comment.repo.CommentRepo;
@@ -35,18 +36,13 @@ public class EventService {
     @Transactional
     public Event createEvent(String token, EventDto eventDto, MultipartFile file) throws IOException {
         try {
-            System.out.println("Starting event creation...");
-            User user = eventHelper.getUserFromToken(token);
-            System.out.println("Validated merchant with ID: " + user.getId());
+             User user = eventHelper.getUserFromToken(token);
 
             String uploadedFileName = eventHelper.uploadEventMedia(file, user.getId());
-            System.out.println("Uploaded media: " + uploadedFileName);
 
             Event event = eventHelper.buildEvent(eventDto, uploadedFileName, user);
-            System.out.println("Built event with merchant ID: " + event.getUser().getId());
 
             Event savedEvent = eventRepository.save(event);
-            System.out.println("Saved event ID: " + savedEvent.getId());
 
             return savedEvent;
         } catch (Exception e) {
@@ -169,6 +165,7 @@ public class EventService {
         event.addComment(comment);
         return eventRepository.save(event);
     }
+
     @Transactional
     public Event updateComment(Long eventId,long commentId , String token, String commentText) {
 
@@ -202,10 +199,11 @@ public class EventService {
         eventRepository.save(event);
     }
 
-    public List<Comment> getComments(Long eventId) {
+    public List<CommentResponse> getComments(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found"));
-        return new ArrayList<>(event.getComments());
+
+        return new ArrayList<>(event.getCommentResponses());
     }
 
     @Transactional

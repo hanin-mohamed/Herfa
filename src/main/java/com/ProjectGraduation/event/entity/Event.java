@@ -1,6 +1,7 @@
 package com.ProjectGraduation.event.entity;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.comment.dto.CommentResponse;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.product.entity.Product;
 import jakarta.persistence.*;
@@ -75,6 +76,23 @@ public class Event {
         comments.add(comment);
         comment.setEvent(this);
     }
+    public Set<CommentResponse> getCommentResponses() {
+        Set<CommentResponse> responses = new HashSet<>();
+        for (Comment comment : comments) {
+            CommentResponse response = new CommentResponse();
+            response.setId(comment.getId());
+            response.setContent(comment.getContent());
+            response.setCreatedAt(comment.getCreatedAt());
+            response.setUpdatedAt(comment.getUpdatedAt());
+            response.setUserFirstName(comment.getUser().getFirstName());
+            response.setUserLastName(comment.getUser().getLastName());
+            response.setUserId(comment.getUser().getId());
+            // Set productId if needed
+            responses.add(response);
+        }
+        return responses;
+    }
+
     public void removeComment(Comment comment) {
         comments.remove(comment);
         comment.setEvent(null);

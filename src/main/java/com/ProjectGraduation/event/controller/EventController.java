@@ -1,5 +1,6 @@
 package com.ProjectGraduation.event.controller;
 
+import com.ProjectGraduation.comment.dto.CommentResponse;
 import com.ProjectGraduation.comment.entity.Comment;
 import com.ProjectGraduation.comment.exception.CommentNotFoundException;
 import com.ProjectGraduation.event.dto.EventDto;
@@ -211,10 +212,14 @@ public class EventController {
             @PathVariable Long eventId
     ) {
         try {
-            List<Comment> comments = eventService.getComments(eventId);
+            List<CommentResponse> comments = eventService.getComments(eventId);
             return ResponseEntity.ok(new ApiResponse(true, "Comments fetched successfully", comments));
+        } catch (EventNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, e.getMessage(), null));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to fetch comments", null));
         }
     }
 
