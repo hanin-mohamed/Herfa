@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface BundleRepository extends JpaRepository<Bundle, Long> {
     List<Bundle> findByMerchant_Username(String username);
+    List<Bundle> findByActiveTrue();
 }

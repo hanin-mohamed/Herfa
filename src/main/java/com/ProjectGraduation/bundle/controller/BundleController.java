@@ -88,6 +88,16 @@ public class BundleController {
                     .body(new ApiResponse(false, "Failed to update bundle status: " + ex.getMessage(), null));
         }
     }
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponse> getActiveBundles() {
+        try {
+            List<BundleResponse> bundles = bundleService.getActiveBundles();
+            return ResponseEntity.ok(new ApiResponse(true, "Active bundles fetched successfully!", bundles));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to fetch active bundles: " + ex.getMessage(), null));
+        }
+    }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
