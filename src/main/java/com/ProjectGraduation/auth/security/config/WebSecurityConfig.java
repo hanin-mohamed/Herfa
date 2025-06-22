@@ -42,6 +42,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/auctions/**").authenticated()
                         .requestMatchers("/comments/**").authenticated()
                         .requestMatchers("/favourites/**").authenticated()
+                        .requestMatchers("/deals/**").authenticated()
                         .requestMatchers("/saving-products/**").authenticated()
                         .anyRequest().authenticated()
                 )
