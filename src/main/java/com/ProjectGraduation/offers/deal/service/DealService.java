@@ -8,6 +8,7 @@ import com.ProjectGraduation.offers.deal.dto.DealResponse;
 import com.ProjectGraduation.offers.deal.entity.Deal;
 import com.ProjectGraduation.offers.deal.repository.DealRepository;
 import com.ProjectGraduation.offers.deal.utils.DealStatus;
+import com.ProjectGraduation.order.service.OrderService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.service.ProductService;
 import jakarta.transaction.Transactional;
@@ -24,7 +25,7 @@ public class DealService {
     private final ProductService productService;
     private final DealRepository dealRepository;
     private final UserService userService;
-
+    private final OrderService orderService;
     @Transactional
     public DealResponse createDeal(DealRequest request, String username) {
         User buyer = userRepository.findByUsernameIgnoreCase(username)
@@ -110,6 +111,8 @@ public class DealService {
         deal.setCounterPrice(null);
         deal.setCounterQuantity(null);
         deal.setStatus(DealStatus.ACCEPTED);
+        // Create an order based on the accepted deal
+        orderService.createOrderFromDeal(deal);
         return mapToDealResponse(dealRepository.save(deal));
     }
     public DealResponse sellerAccept(Long dealId, String sellerUsername) {
@@ -125,6 +128,8 @@ public class DealService {
         }
 
         deal.setStatus(DealStatus.ACCEPTED);
+        // Create an order based on the accepted deal
+        orderService.createOrderFromDeal(deal);
         return mapToDealResponse(dealRepository.save(deal));
     }
 

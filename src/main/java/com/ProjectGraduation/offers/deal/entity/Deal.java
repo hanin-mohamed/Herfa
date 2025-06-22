@@ -3,6 +3,7 @@ package com.ProjectGraduation.offers.deal.entity;
 
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.offers.deal.utils.DealStatus;
+import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,4 +39,8 @@ public class Deal {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+    @OneToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
+
 }
