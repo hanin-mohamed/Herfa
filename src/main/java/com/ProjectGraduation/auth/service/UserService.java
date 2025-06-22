@@ -1,7 +1,10 @@
 package com.ProjectGraduation.auth.service;
 
+import com.ProjectGraduation.auth.dto.ConvertUserToMerchantRequest;
 import com.ProjectGraduation.auth.dto.LoginBody;
 import com.ProjectGraduation.auth.dto.RegistrationBody;
+import com.ProjectGraduation.auth.dto.UserDTO;
+import com.ProjectGraduation.auth.entity.Role;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.exception.InvalidCredentialsException;
@@ -72,6 +75,24 @@ public class UserService {
         String username = jwtService.getUsername(token);
         return userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found with token: " + token));
+    }
+
+    public UserDTO promoteUserToMerchant(ConvertUserToMerchantRequest request) {
+        User user = userRepository.findByUsernameIgnoreCase(request.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + request.getUsername()));
+
+        if (!encryptionService.verifyPassword(request.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid password.");
+        }
+
+        if (user.getRole() == Role.MERCHANT) {
+            throw new IllegalStateException("User is already a merchant.");
+        }
+
+        user.setRole(Role.MERCHANT);
+        User savedUser = userRepository.save(user);
+
+        return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(), savedUser.getRole().name());
     }
 
 

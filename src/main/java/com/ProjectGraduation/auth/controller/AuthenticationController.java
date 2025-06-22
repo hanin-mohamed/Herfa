@@ -1,8 +1,6 @@
 package com.ProjectGraduation.auth.controller;
 
-import com.ProjectGraduation.auth.dto.LoginBody;
-import com.ProjectGraduation.auth.dto.RegistrationBody;
-import com.ProjectGraduation.auth.dto.ResetPasswordRequest;
+import com.ProjectGraduation.auth.dto.*;
 import com.ProjectGraduation.auth.entity.User;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
@@ -129,4 +127,19 @@ public class AuthenticationController {
                     .body(new ApiResponse(false, "An unexpected error occurred: " + ex.getMessage(), null));
         }
     }
+
+    @PostMapping("/promote")
+    public ResponseEntity<ApiResponse> promoteUserToMerchant(@Valid @RequestBody ConvertUserToMerchantRequest request) {
+        try {
+            UserDTO result = userService.promoteUserToMerchant(request);
+            return ResponseEntity.ok(new ApiResponse(true, "User promoted to merchant successfully.", result));
+        } catch (UserNotFoundException | InvalidCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Unexpected error: " + ex.getMessage(), null));
+        }
+    }
+
 }

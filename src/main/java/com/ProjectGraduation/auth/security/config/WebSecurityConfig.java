@@ -29,7 +29,7 @@ public class WebSecurityConfig {
 //                .cors(cors -> cors.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register/**", "/auth/login/**",
+                        .requestMatchers("/auth/register/**", "/auth/login/**","auth/**",
                                 "/auth/me/**", "/auth/verify/**","/auth/forgotPassword/**",
                                 "/auth/reset/**","/auth/resend/**",  "/v3/api-docs/**",
                                 "/swagger-ui/**",
