@@ -84,6 +84,13 @@ public class BundleService {
         bundleRepository.save(bundle);
     }
 
+    public List<BundleResponse> getActiveBundles() {
+        return bundleRepository.findByActiveTrue().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+
     @Transactional
     public void deleteBundle(Long id, User merchant) {
         Bundle bundle = bundleRepository.findById(id)
@@ -93,6 +100,7 @@ public class BundleService {
         }
         bundleRepository.delete(bundle);
     }
+
 
     private BundleResponse mapToResponse(Bundle bundle) {
         List<BundleProductDTO> productDTOs = bundle.getProducts().stream().map(bp ->

@@ -23,7 +23,7 @@ public class DealController {
     private final JWTService jwtService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER','ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> createDeal(
             @RequestBody DealRequest request,
             @RequestHeader("Authorization") String token) {

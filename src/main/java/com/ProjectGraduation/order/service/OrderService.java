@@ -10,6 +10,8 @@ import com.ProjectGraduation.offers.autoOffer.entity.AutoOffer;
 import com.ProjectGraduation.offers.autoOffer.utils.AutoOfferType;
 import com.ProjectGraduation.offers.coupon.service.CouponService;
 import com.ProjectGraduation.offers.coupon.entity.Coupon;
+import com.ProjectGraduation.offers.deal.entity.Deal;
+import com.ProjectGraduation.offers.deal.repository.DealRepository;
 import com.ProjectGraduation.offers.productoffer.dto.AppliedOfferDTO;
 import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
 import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
@@ -47,7 +49,7 @@ public class OrderService {
     private final CouponService couponService;
     private final AutoOfferService autoOfferService;
     private final BundleService bundleService;
-
+    private final DealRepository dealRepository;
     @Transactional
     public OrderResponse createOrder(String username, OrderRequest req) {
         User user = userRepository.findByUsernameIgnoreCase(username)
@@ -171,6 +173,39 @@ public class OrderService {
                 .build();
     }
 
+    @Transactional
+    public void createOrderFromDeal(Deal deal) {
+        User buyer = deal.getBuyer();
+        Product product = deal.getProduct();
+
+        int quantity = deal.getRequestedQuantity();
+        double price = deal.getProposedPrice();
+
+        if (product.getQuantity() < quantity) {
+            throw new IllegalStateException("Not enough product quantity for this deal");
+        }
+
+        product.setQuantity(product.getQuantity() - quantity);
+        productService.saveProduct(product);
+
+        Order order = new Order();
+        order.setUser(buyer);
+        order.setStatus(OrderStatus.PENDING);
+        order.setOrderDetails(new ArrayList<>());
+
+        OrderDetails details = new OrderDetails();
+        details.setOrder(order);
+        details.setProduct(product);
+        details.setQuantity(quantity);
+        details.setUnitPrice(price);
+
+        order.getOrderDetails().add(details);
+        order.setTotalPrice(price * quantity);
+        orderRepo.save(order);
+        deal.setOrder(order);
+        dealRepository.save(deal);
+
+    }
 
 
     private double applyAllOffers(Product product, int quantity, String couponCode, User user, Order order,
