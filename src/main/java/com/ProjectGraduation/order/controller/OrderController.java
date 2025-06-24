@@ -85,4 +85,20 @@ public class OrderController {
                     .body(new ApiResponse(false, "Failed to update order status: " + ex.getMessage(), null));
         }
     }
+
+    @PostMapping("/{orderId}/confirm-delivery")
+    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
+    public ResponseEntity<ApiResponse> confirmOrderDelivery(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long orderId) {
+        try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            Order order = orderService.getOrderById(orderId, username);
+            orderService.confirmOrderAndDistributeFunds(order);
+            return ResponseEntity.ok(new ApiResponse(true, "Order confirmed and funds distributed", null));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to confirm order: " + ex.getMessage(), null));
+        }
+    }
 }

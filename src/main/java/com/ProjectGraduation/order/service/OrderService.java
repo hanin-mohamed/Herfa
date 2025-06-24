@@ -33,6 +33,7 @@ import com.ProjectGraduation.order.utils.OrderStatus;
 import com.ProjectGraduation.product.dto.ProductDTO;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.service.ProductService;
+import com.ProjectGraduation.transaction.service.TransactionHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,12 +55,11 @@ public class OrderService {
     private final UserService userService;
     private final AppWalletService appWalletService;
     private final OrderRepository orderRepository;
-
+    private final TransactionHistoryService transactionHistoryService;
     @Transactional
     public void confirmOrderAndDistributeFunds(Order order) {
         double totalAppFee = 0;
         Map<User, Double> sellerAmounts = new HashMap<>();
-
         for (OrderDetails item : order.getOrderDetails()) {
             Product product = item.getProduct();
             Category category = product.getCategory();
@@ -71,11 +71,19 @@ public class OrderService {
             User seller = product.getUser();
             sellerAmounts.put(seller, sellerAmounts.getOrDefault(seller, 0.0) + sellerPart);
         }
-
         appWalletService.releaseHeldAndAddCommission(order.getTotalPrice(), totalAppFee);
+
+        transactionHistoryService.recordTransaction(
+                null, order.getId(), "COMMISSION", totalAppFee, appWalletService.getWallet().getAppBalance(),
+                "App commission for order"
+        );
 
         for (Map.Entry<User, Double> entry : sellerAmounts.entrySet()) {
             userService.addToSellerWallet(entry.getKey().getId(), entry.getValue());
+            transactionHistoryService.recordTransaction(
+                    entry.getKey(), order.getId(), "PAYOUT", entry.getValue(), entry.getKey().getWalletBalance(),
+                    "Payout for seller from order"
+            );
         }
 
         order.setStatus(OrderStatus.COMPLETED);
@@ -405,6 +413,10 @@ public class OrderService {
     @Transactional
     public void onOrderPaid(Order order) {
         appWalletService.holdAmountForSeller(order.getTotalPrice());
+        transactionHistoryService.recordTransaction(
+                order.getUser(), order.getId(), "PAYMENT", order.getTotalPrice(), 0,
+                "Order payment - held in app wallet"
+        );
     }
 
 

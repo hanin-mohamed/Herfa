@@ -7,6 +7,7 @@ import com.ProjectGraduation.refundOrder.entity.RefundReasonType;
 import com.ProjectGraduation.refundOrder.entity.RefundRequest;
 import com.ProjectGraduation.refundOrder.entity.RefundStatus;
 import com.ProjectGraduation.refundOrder.repository.RefundRequestRepository;
+import com.ProjectGraduation.transaction.service.TransactionHistoryService;
 import org.springframework.stereotype.Service;
 
 import com.ProjectGraduation.auth.entity.User;
@@ -29,9 +30,9 @@ public class RefundRequestService {
         private final OrderRepository orderRepo;
         private final AppWalletService appWalletService;
         private final CloudinaryService cloudinaryService;
+        private final TransactionHistoryService transactionHistoryService;
 
-        public RefundRequest createRefundRequest(User user, Long orderId, RefundReasonType reasonType,
-                                                 String message, List<MultipartFile> images) {
+        public RefundRequest createRefundRequest(User user, Long orderId, RefundReasonType reasonType, String message, List<MultipartFile> images) {
             Order order = orderRepo.findById(orderId)
                     .orElseThrow(() -> new RuntimeException("Order not found"));
 
@@ -107,6 +108,18 @@ public class RefundRequestService {
             user.setWalletBalance(user.getWalletBalance() + refundAmount);
 
             appWalletService.deductFromAppForRefund(refundAmount);
+            user.setWalletBalance(user.getWalletBalance() + refundAmount);
+            appWalletService.deductFromAppForRefund(refundAmount);
+
+            transactionHistoryService.recordTransaction(
+                    user, request.getOrder().getId(), "REFUND", refundAmount, user.getWalletBalance(),
+                    "Refund approved"
+            );
+            transactionHistoryService.recordTransaction(
+                    null, request.getOrder().getId(), "APP_REFUND", -refundAmount, appWalletService.getWallet().getAppBalance(),
+                    "App paid refund to user"
+            );
+
 
             request.setStatus(RefundStatus.APPROVED);
             return refundRepo.save(request);
