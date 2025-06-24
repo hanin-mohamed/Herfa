@@ -23,6 +23,7 @@ public class WebhookController {
 
     private final OrderService orderService;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
 
 //    private final String endpointSecret = Dotenv.load().get("STRIPE_WEBHOOK_SECRET");
     @Value("${STRIPE_WEBHOOK_SECRET}")
@@ -68,6 +69,10 @@ public class WebhookController {
                 if (metadata != null && metadata.has("orderId")) {
                     Long orderId = Long.parseLong(metadata.get("orderId").getAsString());
                     orderService.confirmOrderPayment(orderId);
+
+                    Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+                    orderService.onOrderPaid(order);
+
                     return ResponseEntity.ok("Order payment completed");
                 }
 

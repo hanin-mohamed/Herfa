@@ -402,6 +402,10 @@ public class OrderService {
     }
 
 
+    @Transactional
+    public void onOrderPaid(Order order) {
+        appWalletService.holdAmountForSeller(order.getTotalPrice());
+    }
 
 
 }

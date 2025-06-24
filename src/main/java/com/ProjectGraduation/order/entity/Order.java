@@ -47,7 +47,5 @@ public class Order {
     @CollectionTable(name = "order_applied_offers", joinColumns = @JoinColumn(name = "order_id"))
     @Column(name = "offer_description")
     private List<String> appliedOffers;
-    @ManyToOne
-    @JoinColumn(name = "seller_id")
-    private User seller;
+
 }
