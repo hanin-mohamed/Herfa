@@ -22,7 +22,6 @@ public class RefundRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @ManyToOne
     private Order order;
 
@@ -39,6 +38,7 @@ public class RefundRequest {
     @CollectionTable(name = "refund_images", joinColumns = @JoinColumn(name = "refund_id"))
     @Column(name = "image_url")
     private List<String> imageUrls;
+
 
     @Enumerated(EnumType.STRING)
     private RefundStatus status = RefundStatus.PENDING;

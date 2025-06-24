@@ -1,3 +1,5 @@
+
+// RefundRequestController.java - MAIN CHANGES HERE
 package com.ProjectGraduation.refundOrder.controller;
 
 import com.ProjectGraduation.auth.entity.User;
@@ -8,8 +10,10 @@ import com.ProjectGraduation.refundOrder.entity.RefundRequest;
 import com.ProjectGraduation.refundOrder.service.RefundRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -22,19 +26,20 @@ public class RefundRequestController {
     private final RefundRequestService refundRequestService;
     private final UserService userService;
 
-    @PostMapping("/request/{orderId}")
+    @PostMapping(value = "/request/{orderId}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse> requestRefund(
             @PathVariable Long orderId,
-            @RequestBody Map<String, Object> body,
+            @RequestPart("reasonType") String reasonType,
+            @RequestPart("message") String message,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             Authentication authentication) {
 
         User user = userService.getUserByUsername(authentication.getName());
 
-        RefundReasonType reasonType = RefundReasonType.valueOf((String) body.get("reasonType"));
-        String message = (String) body.get("message");
-        List<String> images = (List<String>) body.getOrDefault("images", List.of());
+        RefundReasonType refundReasonType = RefundReasonType.valueOf(reasonType);
 
-        RefundRequest request = refundRequestService.createRefundRequest(user, orderId, reasonType, message, images);
+        RefundRequest request = refundRequestService.createRefundRequest(
+                user, orderId, refundReasonType, message, images);
 
         return ResponseEntity.ok(new ApiResponse(true, "Refund request created", request));
     }
@@ -53,12 +58,14 @@ public class RefundRequestController {
     }
 
     @PostMapping("/approve/{id}")
+    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> approveRefund(@PathVariable Long id) {
         RefundRequest request = refundRequestService.approveRefund(id);
         return ResponseEntity.ok(new ApiResponse(true, "Refund approved", request));
     }
 
     @PostMapping("/reject/{id}")
+    @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> rejectRefund(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String reason = body.getOrDefault("reason", "No reason provided");
         RefundRequest request = refundRequestService.rejectRefund(id, reason);
