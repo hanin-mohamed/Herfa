@@ -1,23 +1,27 @@
 package com.ProjectGraduation.order.service;
 
+import com.ProjectGraduation.appWallet.service.AppWalletService;
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.auth.repository.UserRepository;
+import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.bundle.entity.Bundle;
 import com.ProjectGraduation.bundle.entity.BundleProduct;
 import com.ProjectGraduation.bundle.service.BundleService;
-import com.ProjectGraduation.offers.autoOffer.service.AutoOfferService;
+import com.ProjectGraduation.category.entity.Category;
 import com.ProjectGraduation.offers.autoOffer.entity.AutoOffer;
+import com.ProjectGraduation.offers.autoOffer.service.AutoOfferService;
 import com.ProjectGraduation.offers.autoOffer.utils.AutoOfferType;
-import com.ProjectGraduation.offers.coupon.service.CouponService;
 import com.ProjectGraduation.offers.coupon.entity.Coupon;
+import com.ProjectGraduation.offers.coupon.service.CouponService;
 import com.ProjectGraduation.offers.deal.entity.Deal;
 import com.ProjectGraduation.offers.deal.repository.DealRepository;
 import com.ProjectGraduation.offers.productoffer.dto.AppliedOfferDTO;
-import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
 import com.ProjectGraduation.offers.productoffer.entity.ProductOffer;
+import com.ProjectGraduation.offers.productoffer.service.ProductOfferService;
 import com.ProjectGraduation.order.dto.OrderItemDTO;
-import com.ProjectGraduation.order.dto.OrderRequest;
 import com.ProjectGraduation.order.dto.OrderItemRequest;
+import com.ProjectGraduation.order.dto.OrderRequest;
 import com.ProjectGraduation.order.dto.OrderResponse;
 import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.entity.OrderDetails;
@@ -29,14 +33,11 @@ import com.ProjectGraduation.order.utils.OrderStatus;
 import com.ProjectGraduation.product.dto.ProductDTO;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.service.ProductService;
-import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-
-import static java.lang.Math.max;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +51,37 @@ public class OrderService {
     private final AutoOfferService autoOfferService;
     private final BundleService bundleService;
     private final DealRepository dealRepository;
+    private final UserService userService;
+    private final AppWalletService appWalletService;
+    private final OrderRepository orderRepository;
+
+    @Transactional
+    public void confirmOrderAndDistributeFunds(Order order) {
+        double totalAppFee = 0;
+        Map<User, Double> sellerAmounts = new HashMap<>();
+
+        for (OrderDetails item : order.getOrderDetails()) {
+            Product product = item.getProduct();
+            Category category = product.getCategory();
+            double percentage = category.getPercentage() / 100.0;
+            double itemTotal = item.getQuantity() * item.getUnitPrice();
+            double appFee = itemTotal * percentage;
+            double sellerPart = itemTotal - appFee;
+            totalAppFee += appFee;
+            User seller = product.getUser();
+            sellerAmounts.put(seller, sellerAmounts.getOrDefault(seller, 0.0) + sellerPart);
+        }
+
+        appWalletService.releaseHeldAndAddCommission(order.getTotalPrice(), totalAppFee);
+
+        for (Map.Entry<User, Double> entry : sellerAmounts.entrySet()) {
+            userService.addToSellerWallet(entry.getKey().getId(), entry.getValue());
+        }
+
+        order.setStatus(OrderStatus.COMPLETED);
+        orderRepository.save(order);
+    }
+
     @Transactional
     public OrderResponse createOrder(String username, OrderRequest req) {
         User user = userRepository.findByUsernameIgnoreCase(username)
@@ -85,6 +117,7 @@ public class OrderService {
                     details.setProduct(product);
                     details.setQuantity(requiredQty);
                     details.setUnitPrice(0);
+                    details.setCoupon(item.getCouponCode() != null ? couponService.getCouponByCode(item.getCouponCode()).orElse(null) : null);
                     order.getOrderDetails().add(details);
                 }
 
@@ -102,7 +135,7 @@ public class OrderService {
                 orderDetails.setOrder(order);
                 orderDetails.setProduct(product);
                 orderDetails.setQuantity(item.getQuantity());
-
+                orderDetails.setCoupon(item.getCouponCode() != null ? couponService.getCouponByCode(item.getCouponCode()).orElse(null) : null);
                 double price = applyAllOffers(product, item.getQuantity(), item.getCouponCode(), user, order, appliedOffers, couponUsages, productOfferUsages);
                 orderDetails.setUnitPrice(price / item.getQuantity());
 
@@ -124,6 +157,40 @@ public class OrderService {
             productOfferService.recordOfferUsage(usage.offer, user, order, usage.discount);
         }
         return mapToOrderResponse(order);
+    }
+
+    @Transactional
+    public void createOrderFromDeal(Deal deal) {
+        User buyer = deal.getBuyer();
+        Product product = deal.getProduct();
+
+        int quantity = deal.getRequestedQuantity();
+        double price = deal.getProposedPrice();
+
+        if (product.getQuantity() < quantity) {
+            throw new IllegalStateException("Not enough product quantity for this deal");
+        }
+
+        product.setQuantity(product.getQuantity() - quantity);
+        productService.saveProduct(product);
+
+        Order order = new Order();
+        order.setUser(buyer);
+        order.setStatus(OrderStatus.PENDING);
+        order.setOrderDetails(new ArrayList<>());
+
+        OrderDetails details = new OrderDetails();
+        details.setOrder(order);
+        details.setProduct(product);
+        details.setQuantity(quantity);
+        details.setUnitPrice(price);
+
+        order.getOrderDetails().add(details);
+        order.setTotalPrice(price * quantity);
+        orderRepo.save(order);
+        deal.setOrder(order);
+        dealRepository.save(deal);
+
     }
 
     public void confirmOrderPayment(Long orderId) {
@@ -173,39 +240,6 @@ public class OrderService {
                 .build();
     }
 
-    @Transactional
-    public void createOrderFromDeal(Deal deal) {
-        User buyer = deal.getBuyer();
-        Product product = deal.getProduct();
-
-        int quantity = deal.getRequestedQuantity();
-        double price = deal.getProposedPrice();
-
-        if (product.getQuantity() < quantity) {
-            throw new IllegalStateException("Not enough product quantity for this deal");
-        }
-
-        product.setQuantity(product.getQuantity() - quantity);
-        productService.saveProduct(product);
-
-        Order order = new Order();
-        order.setUser(buyer);
-        order.setStatus(OrderStatus.PENDING);
-        order.setOrderDetails(new ArrayList<>());
-
-        OrderDetails details = new OrderDetails();
-        details.setOrder(order);
-        details.setProduct(product);
-        details.setQuantity(quantity);
-        details.setUnitPrice(price);
-
-        order.getOrderDetails().add(details);
-        order.setTotalPrice(price * quantity);
-        orderRepo.save(order);
-        deal.setOrder(order);
-        dealRepository.save(deal);
-
-    }
 
 
     private double applyAllOffers(Product product, int quantity, String couponCode, User user, Order order,

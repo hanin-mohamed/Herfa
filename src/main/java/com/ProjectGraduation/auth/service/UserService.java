@@ -11,6 +11,7 @@ import com.ProjectGraduation.auth.exception.InvalidCredentialsException;
 import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
 import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.auth.exception.UserNotVerifiedException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -95,5 +96,11 @@ public class UserService {
         return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(), savedUser.getRole().name());
     }
 
-
+    @Transactional
+    public void addToSellerWallet(Long sellerId, double amount) {
+        User seller = userRepository.findById(sellerId)
+                .orElseThrow(() -> new RuntimeException("Seller not found with ID: " + sellerId));
+        seller.setWalletBalance(seller.getWalletBalance() + amount);
+        userRepository.save(seller);
+    }
 }

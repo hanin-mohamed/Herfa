@@ -1,7 +1,7 @@
 package com.ProjectGraduation.appWallet.service;
 
-import com.ProjectGraduation.appWallet.repository.AppWalletRepository;
 import com.ProjectGraduation.appWallet.entity.AppWallet;
+import com.ProjectGraduation.appWallet.repository.AppWalletRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -73,11 +73,17 @@ public class AppWalletService {
         appWalletRepository.save(wallet);
     }
 
+
     @Transactional
-    public void resetWallet() {
+    public void releaseHeldAndAddCommission(double totalOrder, double commission) {
         AppWallet wallet = getWallet();
-        wallet.setAppBalance(0.0);
-        wallet.setHeldForSellers(0.0);
+
+        if (wallet.getHeldForSellers() < totalOrder) {
+            throw new IllegalArgumentException("Not enough held funds to release");
+        }
+        wallet.setHeldForSellers(wallet.getHeldForSellers() - totalOrder);
+        wallet.setAppBalance(wallet.getAppBalance() + commission);
         appWalletRepository.save(wallet);
     }
+
 }
