@@ -10,6 +10,7 @@ import com.ProjectGraduation.order.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -101,4 +102,16 @@ public class OrderController {
                     .body(new ApiResponse(false, "Failed to confirm order: " + ex.getMessage(), null));
         }
     }
+    @PostMapping("/pay/{orderId}")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    public ResponseEntity<?> payOrderFromWallet(@PathVariable Long orderId, Authentication authentication) {
+        String username = authentication.getName();
+        try {
+            orderService.payOrderFromWallet(orderId, username);
+            return ResponseEntity.ok("Order paid from wallet!");
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
 }

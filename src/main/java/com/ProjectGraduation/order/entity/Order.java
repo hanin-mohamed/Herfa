@@ -38,6 +38,10 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetails> orderDetails = new ArrayList<>();
+
+    @Column(name = "paid_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime paidAt;
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore

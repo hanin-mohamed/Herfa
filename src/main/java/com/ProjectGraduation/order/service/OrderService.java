@@ -38,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -56,6 +57,7 @@ public class OrderService {
     private final AppWalletService appWalletService;
     private final OrderRepository orderRepository;
     private final TransactionHistoryService transactionHistoryService;
+
     @Transactional
     public void confirmOrderAndDistributeFunds(Order order) {
         double totalAppFee = 0;
@@ -90,6 +92,32 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    @Transactional
+    public void payOrderFromWallet(Long orderId, String username) {
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        User user = userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (!order.getUser().getId().equals(user.getId()))
+            throw new RuntimeException("You can only pay for your own orders.");
+
+        if (order.getStatus() != OrderStatus.PENDING)
+            throw new RuntimeException("Order already paid or processed.");
+
+        double amount = order.getTotalPrice();
+        if (user.getWalletBalance() < amount)
+            throw new RuntimeException("Insufficient wallet balance.");
+
+        user.setWalletBalance(user.getWalletBalance() - amount);
+        int pointsEarned = (int) (order.getTotalPrice() / 100);
+        user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsEarned);
+        userRepository.save(user);
+        appWalletService.holdAmountForSeller(amount);
+        order.setStatus(OrderStatus.PAID);
+        order.setPaidAt(LocalDateTime.now());
+        orderRepo.save(order);
+    }
     @Transactional
     public OrderResponse createOrder(String username, OrderRequest req) {
         User user = userRepository.findByUsernameIgnoreCase(username)
@@ -247,8 +275,6 @@ public class OrderService {
                         .toList())
                 .build();
     }
-
-
 
     private double applyAllOffers(Product product, int quantity, String couponCode, User user, Order order,
                                   List<String> appliedOffers, List<CouponUsageRecord> couponUsages,
