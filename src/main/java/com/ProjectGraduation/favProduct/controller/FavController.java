@@ -3,6 +3,7 @@ package com.ProjectGraduation.favProduct.controller;
 import com.ProjectGraduation.favProduct.service.FavService;
 import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.product.entity.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,6 +59,16 @@ public class FavController {
         } catch (Exception ex) {
             return ResponseEntity.internalServerError()
                     .body(new ApiResponse(false, "Failed to fetch users: " + ex.getMessage(), null));
+        }
+    }
+    @GetMapping("")
+    public ResponseEntity<ApiResponse> getAllFavProducts(@RequestHeader("Authorization") String token) {
+        try {
+            List<Product> favProducts = service.getAllFavProducts(token);
+            return ResponseEntity.ok(new ApiResponse(true, "Favourite products fetched successfully", favProducts));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse(false, "Failed to fetch favourite products: " + e.getMessage(), null));
         }
     }
 }

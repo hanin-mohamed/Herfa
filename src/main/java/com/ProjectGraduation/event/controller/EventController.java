@@ -176,7 +176,7 @@ public class EventController {
                     eventId,
                     commentId,
                     token.replace("Bearer ", ""),
-                   commentText
+                    commentText
             );
             return ResponseEntity.ok(
                     new ApiResponse(true, "Comment updated successfully", updatedEvent)
@@ -231,6 +231,25 @@ public class EventController {
             List<Event> events = eventService.getUserInterestedEvents(token);
             return ResponseEntity.ok(new ApiResponse(true, "Interested events fetched successfully", events));
         } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to fetch interested events", null));
+        }
+    }
+
+    @GetMapping("i")
+    public ResponseEntity<ApiResponse> getUserInterestedEvent(
+            @RequestHeader("Authorization") String token
+    ) {
+        try {
+            List<Event> events = eventService.getAllInterestedEvents(token);
+            return ResponseEntity.ok(new ApiResponse(true, "Interested events fetched successfully", events));
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, e.getMessage(), null));
+        } catch (EventNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(false, e.getMessage(), null));
         } catch (Exception e) {

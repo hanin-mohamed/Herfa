@@ -58,6 +58,12 @@ public class FavService {
         userRepository.save(user);
 
     }
+    public List<Product>getAllFavProducts(String token) {
+        String userUserName =
+                jwtService.getUsername(token.replace("Bearer ",""));
+        User user = getUserByUserName(userUserName) ;
+        return user.getFavProducts();
+    }
 
 
     public User getUserByUserName(String username) {

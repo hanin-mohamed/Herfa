@@ -216,5 +216,14 @@ public class EventService {
         }
         return events;
     }
+    public List<Event> getAllInterestedEvents(String token) {
+        User user = eventHelper.getUserFromToken(token);
+        List<Event> events = eventRepository.findEventsByInterestedUserId(user.getId());
+        if (events.isEmpty()) {
+            throw new EventNotFoundException("No events found for the user with ID: " + user.getId());
+        }
+        return events;
+    }
+
 
 }
