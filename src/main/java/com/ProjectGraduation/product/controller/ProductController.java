@@ -12,6 +12,7 @@ import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.*;
 import com.ProjectGraduation.category.service.CategoryService;
 import com.ProjectGraduation.product.service.ProductService;
+import com.ProjectGraduation.shareLink.ShareLinkResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -210,4 +212,22 @@ public class ProductController {
         return ResponseEntity.ok(productService.findMerchantProducts(user));
     }
 
+    @GetMapping("/{productId}/share-link/detailed")
+    public ResponseEntity<ShareLinkResponse> getDetailedProductShareLink(
+            @PathVariable Long productId) {
+
+        String shareLink = "https://zygotic-marys-herfa-c2dd67a8.koyeb.app/products/" + productId;
+
+        ShareLinkResponse response = new ShareLinkResponse();
+        response.setSuccess(true);
+        response.setMessage("Product share link generated");
+        response.setShareLink(shareLink);
+        response.setProductId(productId);
+        response.setTimestamp(LocalDateTime.now());
+
+        return ResponseEntity.ok(response);
+    }
 }
+
+
+
