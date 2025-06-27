@@ -76,20 +76,39 @@ public class OrderService {
         appWalletService.releaseHeldAndAddCommission(order.getTotalPrice(), totalAppFee);
 
         transactionHistoryService.recordTransaction(
-                null, order.getId(), "COMMISSION", totalAppFee, appWalletService.getWallet().getAppBalance(),
+                null,
+                order.getId(),
+                "COMMISSION",
+                totalAppFee,
+                appWalletService.getWallet().getAppBalance(),
                 "App commission for order"
         );
 
         for (Map.Entry<User, Double> entry : sellerAmounts.entrySet()) {
             userService.addToSellerWallet(entry.getKey().getId(), entry.getValue());
             transactionHistoryService.recordTransaction(
-                    entry.getKey(), order.getId(), "PAYOUT", entry.getValue(), entry.getKey().getWalletBalance(),
+                    entry.getKey(),
+                    order.getId(),
+                    "SELLER_PAYOUT",
+                    entry.getValue(),
+                    entry.getKey().getWalletBalance(),
                     "Payout for seller from order"
             );
         }
 
+
         order.setStatus(OrderStatus.COMPLETED);
         orderRepository.save(order);
+
+        // تسجيل إكمال الطلب
+        transactionHistoryService.recordTransaction(
+                order.getUser(),
+                order.getId(),
+                "ORDER_COMPLETED",
+                0,
+                0,
+                "Order marked as completed"
+        );
     }
 
     @Transactional
@@ -99,26 +118,75 @@ public class OrderService {
         User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (!order.getUser().getId().equals(user.getId()))
+        if (!order.getUser().getId().equals(user.getId())) {
+            transactionHistoryService.recordTransaction(
+                    user,
+                    order.getId(),
+                    "PAYMENT_FAILED",
+                    0,
+                    user.getWalletBalance(),
+                    "Attempt to pay for another user's order"
+            );
             throw new RuntimeException("You can only pay for your own orders.");
-
-        if (order.getStatus() != OrderStatus.PENDING)
+        }
+        if (order.getStatus() != OrderStatus.PENDING) {
+            transactionHistoryService.recordTransaction(
+                    user,
+                    order.getId(),
+                    "PAYMENT_FAILED",
+                    0,
+                    user.getWalletBalance(),
+                    "Attempt to pay for already processed order"
+            );
             throw new RuntimeException("Order already paid or processed.");
+        }
 
         double amount = order.getTotalPrice();
-        if (user.getWalletBalance() < amount)
+        if (user.getWalletBalance() < amount) {
+            transactionHistoryService.recordTransaction(
+                    user,
+                    order.getId(),
+                    "PAYMENT_FAILED",
+                    0,
+                    user.getWalletBalance(),
+                    "Insufficient wallet balance"
+            );
             throw new RuntimeException("Insufficient wallet balance.");
+        }
 
         user.setWalletBalance(user.getWalletBalance() - amount);
         int pointsEarned = (int) (order.getTotalPrice() / 100);
         user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsEarned);
         userRepository.save(user);
+
         appWalletService.holdAmountForSeller(amount);
         order.setStatus(OrderStatus.PAID);
         order.setPaidAt(LocalDateTime.now());
         orderRepo.save(order);
+
+        transactionHistoryService.recordTransaction(
+                user,
+                order.getId(),
+                "PAYMENT",
+                amount,
+                user.getWalletBalance(),
+                "Order payment completed from wallet"
+        );
+
+        if (pointsEarned > 0) {
+            transactionHistoryService.recordTransaction(
+                    user,
+                    order.getId(),
+                    "LOYALTY_POINTS_EARNED",
+                    pointsEarned,
+                    user.getLoyaltyPoints(),
+                    "Loyalty points earned from order"
+            );
+        }
+
     }
     @Transactional
+
     public OrderResponse createOrder(String username, OrderRequest req) {
         User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -128,6 +196,16 @@ public class OrderService {
         order.setStatus(OrderStatus.PENDING);
         order.setOrderDetails(new ArrayList<>());
         order = orderRepo.save(order);
+
+        transactionHistoryService.recordTransaction(
+                user,
+                order.getId(),
+                "ORDER_CREATION",
+                0,
+                user.getWalletBalance(),
+                "Order created with status PENDING"
+        );
+
 
         double total = 0.0;
         List<String> appliedOffers = new ArrayList<>();
