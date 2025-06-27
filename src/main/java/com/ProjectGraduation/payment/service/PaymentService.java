@@ -1,6 +1,7 @@
 package com.ProjectGraduation.payment.service;
 
 import com.ProjectGraduation.auth.entity.User;
+import com.ProjectGraduation.auth.repository.UserRepository;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.order.entity.Order;
@@ -22,6 +23,7 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final JWTService jwtService;
+    private final UserRepository userRepository;
 
     public String createOrderCheckoutSession(Long orderId) throws StripeException {
         Order order = orderRepository.findById(orderId)
@@ -90,6 +92,8 @@ public class PaymentService {
                 .putMetadata("userId", String.valueOf(user.getId()))
                 .putMetadata("amount", String.valueOf(amount))
                 .build();
+        user.setWalletBalance(amountInCents+user.getWalletBalance());
+        userRepository.save(user);
 
         Session session = Session.create(params);
         return session.getUrl();
