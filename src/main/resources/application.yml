@@ -1,45 +1,25 @@
 spring:
-<<<<<<< Updated upstream
   datasource:
 #    url: jdbc:mysql://localhost:3306/herfadb
 #    username: root
 #    password: root
-=======
-
-#  datasource:
-#    url: jdbc:mysql://localhost:3306/herfa_db
-#    username: root
-#    password: hanona
->>>>>>> Stashed changes
 #    driver-class-name: com.mysql.cj.jdbc.Driver
-#    hikari:
-#      maximum-pool-size: 10
+  #    hikari:
+  #      maximum-pool-size: 10
 
-<<<<<<< Updated upstream
-    url: jdbc:mysql://ballast.proxy.rlwy.net:47709/railway?useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: LUKgITJRDcdSrWxDfbreGBJMAPrCAhra
-    driver-class-name: com.mysql.cj.jdbc.Driver
+  #    url: jdbc:mysql://ballast.proxy.rlwy.net:47709/railway?useSSL=false&allowPublicKeyRetrieval=true
+  #    username: root
+  #    password: LUKgITJRDcdSrWxDfbreGBJMAPrCAhra
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
   hikari:
-    maximum-pool-size: 10
+    maximum-pool-size: 20
+    minimum-idle: 5
     connection-timeout: 30000
     idle-timeout: 600000
     max-lifetime: 1800000
   websocket:
     sockjs:
       suppress-origin-check: true
-=======
-  datasource:
-    url: jdbc:mysql://trolley.proxy.rlwy.net:53734/railway?useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: YLWYGTCfWdSDOnLnbshXkgvKOQTNPUOA
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
->>>>>>> Stashed changes
 
   jpa:
     hibernate:
@@ -50,6 +30,7 @@ spring:
         format_sql: true
     database: mysql
     database-platform: org.hibernate.dialect.MySQLDialect
+
 
 
   mail:
@@ -71,7 +52,11 @@ spring:
     multipart:
       max-file-size: 500MB
       max-request-size: 500MB
-
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
 
 
 
@@ -96,6 +81,8 @@ jwt:
   expiryInSeconds: 604800
 
 
+
+
 project:
   poster: ${user.home}/poster/
 
@@ -103,18 +90,7 @@ base:
   url: "http://localhost:${server.port}"
 
 
-<<<<<<< Updated upstream
 STRIPE_SECRET_KEY:
   sk_test_51RLL9FE2kb6bjtHxTamrhWhodYcsa9FBQTSUpOXjvt9uKMTCunNDc0VyR0DwoKuBahjOudcQdmtVkGZYBcWCsklJ00cuQeI9lG
 STRIPE_WEBHOOK_SECRET:
   whsec_296aaf1f43d3c2d5c388fa1241c581869aca15478ee2f1dfd2b858c6aad505ab
-=======
-#stripe:
-#  secret:
-#    key: ***REMOVED***
-#
-#  webhook:
-#    secret: whsec_296aaf1f43d3c2d5c388fa1241c581869aca15478ee2f1dfd2b858c6aad505ab
-#
-
->>>>>>> Stashed changes
