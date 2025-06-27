@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -140,6 +141,12 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Unexpected error: " + ex.getMessage(), null));
         }
+    }
+
+    @GetMapping("/getBalance")
+//    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
+    public ResponseEntity<Double> getReservedBalance(@RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(userService.getReservedBalance(token));
     }
 
 }

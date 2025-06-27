@@ -103,4 +103,13 @@ public class UserService {
         seller.setWalletBalance(seller.getWalletBalance() + amount);
         userRepository.save(seller);
     }
+
+    @Transactional
+    public double getReservedBalance(String token) {
+        String username = jwtService.getUsername(token.replace("Bearer ", ""));
+        User user = userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return user.getWalletBalance();
+    }
+
 }
