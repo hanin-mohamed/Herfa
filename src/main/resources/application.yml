@@ -7,10 +7,10 @@ spring:
   #    hikari:
   #      maximum-pool-size: 10
 
-  #    url: jdbc:mysql://ballast.proxy.rlwy.net:47709/railway?useSSL=false&allowPublicKeyRetrieval=true
-  #    username: root
-  #    password: LUKgITJRDcdSrWxDfbreGBJMAPrCAhra
-  #    driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://ballast.proxy.rlwy.net:47709/railway?useSSL=false&allowPublicKeyRetrieval=true
+      username: root
+      password: LUKgITJRDcdSrWxDfbreGBJMAPrCAhra
+      driver-class-name: com.mysql.cj.jdbc.Driver
   hikari:
     maximum-pool-size: 20
     minimum-idle: 5
