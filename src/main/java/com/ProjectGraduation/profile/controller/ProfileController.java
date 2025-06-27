@@ -34,9 +34,6 @@ public class ProfileController {
     private final JWTService jwtService;
     private final UserService userService;
 
-    @Value("${project.poster}")
-    private String basePath;
-
     @GetMapping("my-profile")
     public ResponseEntity<ApiResponse> getMyProfile(@RequestHeader("Authorization") String token) {
         try {

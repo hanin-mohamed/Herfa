@@ -249,7 +249,7 @@ public class OrderService {
                     .id(detail.getId())
                     .quantity(detail.getQuantity())
                     .unitPrice(detail.getUnitPrice())
-                    .couponCode(detail.getCoupon().getCode())
+                    .couponCode(detail.getCoupon() != null ? detail.getCoupon().getCode() : null)
                     .product(ProductDTO.builder()
                             .id(product.getId())
                             .name(product.getName())
