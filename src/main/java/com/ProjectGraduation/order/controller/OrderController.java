@@ -24,6 +24,7 @@ public class OrderController {
     private final JWTService jwtService;
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> createOrder(@RequestHeader("Authorization") String token,
                                                    @RequestBody OrderRequest orderRequest) {
         try {
@@ -37,7 +38,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getOrderById(@RequestHeader("Authorization") String token,
                                                     @PathVariable Long orderId) {
         try {
@@ -51,9 +52,12 @@ public class OrderController {
     }
 
     @DeleteMapping("/{orderId}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
-    public ResponseEntity<ApiResponse> deleteOrder(@PathVariable Long orderId) {
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
+    public ResponseEntity<ApiResponse> deleteOrder(@RequestHeader("Authorization") String token,
+                                                   @PathVariable Long orderId) {
         try {
+            String username = jwtService.getUsername(token.replace("Bearer ", ""));
+            Order order = orderService.getOrderById(orderId, username);
             orderService.deleteOrder(orderId);
             return ResponseEntity.ok(new ApiResponse(true, "Order deleted successfully and stock restored!", null));
         } catch (Exception ex) {
@@ -63,7 +67,7 @@ public class OrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> getMyOrders(@RequestHeader("Authorization") String token) {
         try {
             String username = jwtService.getUsername(token.replace("Bearer ", ""));
@@ -76,6 +80,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/status")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse> updateOrderStatus(@PathVariable Long orderId,
                                                          @RequestParam OrderStatus status) {
         try {
@@ -102,8 +107,9 @@ public class OrderController {
                     .body(new ApiResponse(false, "Failed to confirm order: " + ex.getMessage(), null));
         }
     }
+
     @PostMapping("/pay/{orderId}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
     public ResponseEntity<?> payOrderFromWallet(@PathVariable Long orderId, Authentication authentication) {
         String username = authentication.getName();
         try {
@@ -113,5 +119,4 @@ public class OrderController {
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
-
 }

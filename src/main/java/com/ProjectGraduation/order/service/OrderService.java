@@ -96,11 +96,9 @@ public class OrderService {
             );
         }
 
-
         order.setStatus(OrderStatus.COMPLETED);
         orderRepository.save(order);
 
-        // تسجيل إكمال الطلب
         transactionHistoryService.recordTransaction(
                 order.getUser(),
                 order.getId(),
@@ -183,10 +181,9 @@ public class OrderService {
                     "Loyalty points earned from order"
             );
         }
-
     }
-    @Transactional
 
+    @Transactional
     public OrderResponse createOrder(String username, OrderRequest req) {
         User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -206,7 +203,6 @@ public class OrderService {
                 "Order created with status PENDING"
         );
 
-
         double total = 0.0;
         List<String> appliedOffers = new ArrayList<>();
         List<CouponUsageRecord> couponUsages = new ArrayList<>();
@@ -216,6 +212,13 @@ public class OrderService {
             if (item.getBundleId() != null) {
                 Bundle bundle = bundleService.getById(item.getBundleId());
                 if (!bundle.isActive()) throw new IllegalStateException("Inactive bundle");
+
+                // Check if any product in bundle belongs to the user
+                for (BundleProduct bp : bundle.getProducts()) {
+                    if (bp.getProduct().getUser().getId().equals(user.getId())) {
+                        throw new IllegalStateException("You cannot order a bundle containing your own products");
+                    }
+                }
 
                 for (BundleProduct bp : bundle.getProducts()) {
                     Product product = bp.getProduct();
@@ -239,8 +242,15 @@ public class OrderService {
                 appliedOffers.add("Bundle: " + bundle.getName());
             } else {
                 Product product = productService.getById(item.getProductId());
-                if (product == null || product.getQuantity() < item.getQuantity())
+
+                // Check if product belongs to the user
+                if (product.getUser().getId().equals(user.getId())) {
+                    throw new IllegalStateException("You cannot order your own product: " + product.getName());
+                }
+
+                if (product == null || product.getQuantity() < item.getQuantity()) {
                     throw new IllegalStateException("Invalid product or stock");
+                }
 
                 product.setQuantity(product.getQuantity() - item.getQuantity());
                 productService.saveProduct(product);
@@ -278,6 +288,11 @@ public class OrderService {
         User buyer = deal.getBuyer();
         Product product = deal.getProduct();
 
+        // Check if buyer is the product owner
+        if (product.getUser().getId().equals(buyer.getId())) {
+            throw new IllegalStateException("You cannot make a deal on your own product");
+        }
+
         int quantity = deal.getRequestedQuantity();
         double price = deal.getProposedPrice();
 
@@ -304,7 +319,6 @@ public class OrderService {
         orderRepo.save(order);
         deal.setOrder(order);
         dealRepository.save(deal);
-
     }
 
     public void confirmOrderPayment(Long orderId) {
@@ -317,7 +331,6 @@ public class OrderService {
         user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsEarned);
         userRepository.save(user);
         orderRepo.save(order);
-
     }
 
     private OrderResponse mapToOrderResponse(Order order) {
@@ -357,22 +370,17 @@ public class OrderService {
     private double applyAllOffers(Product product, int quantity, String couponCode, User user, Order order,
                                   List<String> appliedOffers, List<CouponUsageRecord> couponUsages,
                                   List<ProductOfferUsageRecord> productOfferUsages) {
-
-        // 1. Apply Product Offer
         double unitPrice = applyProductOffer(product, quantity, product.getCategory() != null ? product.getCategory().getId() : null,
                 appliedOffers, productOfferUsages);
 
-        // 2. Apply Coupon
         double couponDiscount = applyCoupon(product, quantity, couponCode, user, order, couponUsages, appliedOffers);
         double subtotal = Math.max(unitPrice * quantity - couponDiscount, 0);
 
-        // 3. Apply Best Auto Offer
         double autoDiscount = applyBestAutoOffer(product, quantity, subtotal, user, order,
                 product.getCategory() != null ? product.getCategory().getId() : null, appliedOffers);
 
         return Math.max(subtotal - autoDiscount, 0);
     }
-
 
     private double applyProductOffer(Product product, int quantity, Long categoryId,
                                      List<String> appliedOffers, List<ProductOfferUsageRecord> usageRecords) {
@@ -441,7 +449,6 @@ public class OrderService {
                 .orElse(0.0);
     }
 
-
     private boolean isEligibleForAutoOffer(AutoOffer offer, Product product, int quantity) {
         if (!offer.isActive()) return false;
 
@@ -458,7 +465,6 @@ public class OrderService {
             case BUY_X_GET_Y -> offer.getBuyQuantity() != null && quantity >= offer.getBuyQuantity();
         };
     }
-
 
     private double calculateAutoDiscount(AutoOffer autoOffer, double amount) {
         if (autoOffer.getFixedPrice() != null) {
@@ -513,7 +519,6 @@ public class OrderService {
         return orderRepo.save(order);
     }
 
-
     @Transactional
     public void onOrderPaid(Order order) {
         appWalletService.holdAmountForSeller(order.getTotalPrice());
@@ -522,6 +527,4 @@ public class OrderService {
                 "Order payment - held in app wallet"
         );
     }
-
-
 }
