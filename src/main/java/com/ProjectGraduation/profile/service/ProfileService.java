@@ -31,19 +31,10 @@ public class ProfileService {
     private final ProfileRatingService profileRatingService;
     private final CloudinaryService cloudinaryService;
 
-    @Value("${project.poster}")
-    private String basePath;
-
-    @Value("${base.url}")
-    private String baseUrl;
-
-
-
     public Profile getProfile(User user) {
         return profileRepo.findByUser(user)
                 .orElseThrow(() -> new IllegalStateException("Profile not found for user with ID: " + user.getId()));
     }
-
     public Profile updateProfile(User user, UpdateProfileRequestDTO updateRequest) {
         try {
         Profile profile = profileRepo.findByUser(user)
@@ -73,8 +64,6 @@ public class ProfileService {
     }catch (Exception e){
         throw new RuntimeException("Failed to update profile "+ e.getMessage());}
     }
-
-
     public String updateProfilePic(User user, MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -99,8 +88,6 @@ public class ProfileService {
             throw new RuntimeException("Failed to upload profile picture "+ e.getMessage());
         }
     }
-
-
     public Profile getProfileByUserId(Long userId) {
         try {
         User user = userRepository.findById(userId)
@@ -112,9 +99,6 @@ public class ProfileService {
             throw new RuntimeException("Failed to fetch profile "+ e.getMessage());
         }
     }
-
-
-
     @Transactional
     public ProfileWithProductsDTO getProfileWithProducts(Long userId) {
 
