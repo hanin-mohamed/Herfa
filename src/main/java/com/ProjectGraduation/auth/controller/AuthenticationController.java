@@ -144,9 +144,14 @@ public class AuthenticationController {
     }
 
     @GetMapping("/getBalance")
-//    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
-    public ResponseEntity<Double> getReservedBalance(@RequestHeader("Authorization") String token) {
-        return ResponseEntity.ok(userService.getReservedBalance(token));
+    public ResponseEntity<ApiResponse> getReservedBalance(@RequestHeader("Authorization") String token) {
+        try {
+            double balance = userService.getReservedBalance(token);
+            return ResponseEntity.ok(new ApiResponse(true, "Reserved balance retrieved successfully", balance));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to get reserved balance: " + ex.getMessage(), null));
+        }
     }
 
 }

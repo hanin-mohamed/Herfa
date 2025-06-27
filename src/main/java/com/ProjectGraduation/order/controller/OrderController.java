@@ -1,5 +1,6 @@
 package com.ProjectGraduation.order.controller;
 
+import com.ProjectGraduation.auth.exception.UserNotFoundException;
 import com.ProjectGraduation.auth.service.JWTService;
 import com.ProjectGraduation.common.ApiResponse;
 import com.ProjectGraduation.order.dto.OrderRequest;
@@ -8,6 +9,7 @@ import com.ProjectGraduation.order.entity.Order;
 import com.ProjectGraduation.order.service.OrderService;
 import com.ProjectGraduation.order.utils.OrderStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -92,6 +94,7 @@ public class OrderController {
         }
     }
 
+
     @PostMapping("/{orderId}/confirm-delivery")
     @PreAuthorize("hasAuthority('ROLE_MERCHANT')")
     public ResponseEntity<ApiResponse> confirmOrderDelivery(
@@ -108,15 +111,27 @@ public class OrderController {
         }
     }
 
+
     @PostMapping("/pay/{orderId}")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_MERCHANT')")
-    public ResponseEntity<?> payOrderFromWallet(@PathVariable Long orderId, Authentication authentication) {
+    public ResponseEntity<ApiResponse> payOrderFromWallet(
+            @PathVariable Long orderId,
+            Authentication authentication) {
         String username = authentication.getName();
         try {
             orderService.payOrderFromWallet(orderId, username);
-            return ResponseEntity.ok("Order paid from wallet!");
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(e.getMessage());
+            return ResponseEntity.ok(
+                    new ApiResponse(true, "Order paid from wallet successfully!", null)
+            );
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, "User not found: " + ex.getMessage(), null));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, ex.getMessage(), null));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to pay order: " + ex.getMessage(), null));
         }
     }
 }
