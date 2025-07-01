@@ -2,10 +2,7 @@ package com.ProjectGraduation.auth.controller;
 
 import com.ProjectGraduation.auth.dto.*;
 import com.ProjectGraduation.auth.entity.User;
-import com.ProjectGraduation.auth.exception.UserAlreadyExistsException;
-import com.ProjectGraduation.auth.exception.UserNotFoundException;
-import com.ProjectGraduation.auth.exception.InvalidCredentialsException;
-import com.ProjectGraduation.auth.exception.UserNotVerifiedException;
+import com.ProjectGraduation.auth.exception.*;
 import com.ProjectGraduation.auth.service.AuthService;
 import com.ProjectGraduation.auth.service.UserService;
 import com.ProjectGraduation.common.ApiResponse;
@@ -59,11 +56,13 @@ public class AuthenticationController {
         try {
             String jwtUser = userService.loginUser(loginBody);
             return ResponseEntity.ok(new ApiResponse(true, "Login successful.", jwtUser));
-        } catch (UserNotFoundException | InvalidCredentialsException | UserNotVerifiedException ex) {
+        } catch (UserNotFoundException | InvalidCredentialsException |
+                 UserNotVerifiedException | InvalidFCMTokenException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(false, ex.getMessage(), null));
         }
     }
+
 
     @PostMapping("/forgotPassword")
     public ResponseEntity<ApiResponse> forgotPassword(@RequestParam String email) {

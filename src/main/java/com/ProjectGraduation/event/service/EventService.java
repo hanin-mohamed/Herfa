@@ -11,6 +11,8 @@ import com.ProjectGraduation.event.helper.EventHelper;
 import com.ProjectGraduation.event.repo.EventRepo;
 import com.ProjectGraduation.auth.entity.User;
 
+import com.ProjectGraduation.notification.entity.NotificationMessage;
+import com.ProjectGraduation.notification.service.NotificationService;
 import com.ProjectGraduation.product.entity.Product;
 import com.ProjectGraduation.product.exception.ProductNotFoundException;
 
@@ -32,6 +34,8 @@ public class EventService {
     private final ProductRepository productRepository;
     private final CommentRepo commentRepo;
     private final EventHelper eventHelper;
+    private final NotificationService notificationService;
+
 
     @Transactional
     public Event createEvent(String token, EventDto eventDto, MultipartFile file) throws IOException {
@@ -128,8 +132,20 @@ public class EventService {
         eventHelper.validateProductOwnership(product, merchant);
 
         event.addProduct(product);
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        sendNewProductNotification(savedEvent, product);
+
+        return savedEvent;    }
+
+
+    private void sendNewProductNotification (Event event, Product product) {
+        NotificationMessage notification = new NotificationMessage( );
+        notification.setTitle("New Product Added to Event " + event.getName());
+        notification.setBody("Product " + product.getName() + " has been added to the Event " + event.getName());
+        notification.setImage(product.getMedia());
+        notificationService.sendToInterestedUsers(event.getId(), notification);
     }
+
 
     @Transactional
     public Event removeProductFromEvent(Long eventId, Long productId, String token) {

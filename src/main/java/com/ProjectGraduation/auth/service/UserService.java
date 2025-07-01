@@ -46,13 +46,19 @@ public class UserService {
         return user;
     }
 
-    public String loginUser(LoginBody loginUserBody) {
+    public String loginUser(LoginBody loginBody) {
+        User user = userRepository.findByUsernameIgnoreCase(loginBody.getUsername())
+                .orElseGet(() -> userRepository.findByEmailIgnoreCase(loginBody.getUsername())
+                        .orElseThrow(() -> {
+                            return new InvalidCredentialsException("Invalid username or email");
+                        }));
 
-        User user = userRepository.findByUsernameIgnoreCase(loginUserBody.getUsername())
-                .orElseGet(() -> userRepository.findByEmailIgnoreCase(loginUserBody.getUsername())
-                        .orElseThrow(() -> new InvalidCredentialsException("Invalid username or email")));
+        if (loginBody.getFcmToken() != null) {
+            user.setFCMToken(loginBody.getFcmToken());
+            userRepository.save(user);
+        }
 
-        if (!encryptionService.verifyPassword(loginUserBody.getPassword(), user.getPassword())) {
+        if (!encryptionService.verifyPassword(loginBody.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException("Invalid password");
         }
 
@@ -62,6 +68,8 @@ public class UserService {
 
         return jwtService.generateJWTForUser(user);
     }
+
+
 
     public User getUserByUsername(String username) {
         return userRepository.findByUsernameIgnoreCase(username)

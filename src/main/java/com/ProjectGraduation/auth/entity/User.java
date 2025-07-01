@@ -53,6 +53,9 @@ public class User {
 
     private boolean verified = false;
 
+    private String FCMToken ;
+
+
     private String otp;
     private LocalDateTime otpExpiration;
     private String resetOtp;

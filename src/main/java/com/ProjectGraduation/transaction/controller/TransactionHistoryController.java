@@ -18,15 +18,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionHistoryController {
 
-    private final TransactionHistoryService transactionService;
+        private final TransactionHistoryService transactionService;
 
-    @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<TransactionHistory>> getOrderTransactions(@PathVariable Long orderId) {
-        return ResponseEntity.ok(transactionService.getOrderTransactions(orderId));
-    }
+        @GetMapping("/order/{orderId}")
+        public ResponseEntity<List<TransactionHistory>> getOrderTransactions(@PathVariable Long orderId) {
+            return ResponseEntity.ok(transactionService.getOrderTransactions(orderId));
+        }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TransactionHistory>> getUserTransactions(@PathVariable Long userId) {
-        return ResponseEntity.ok(transactionService.getUserTransactions(userId));
-    }
+        @GetMapping("/user/{userId}")
+        public ResponseEntity<List<TransactionHistory>> getUserTransactions(@PathVariable Long userId) {
+            return ResponseEntity.ok(transactionService.getUserTransactions(userId));
+        }
 }
